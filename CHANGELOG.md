@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.2.1] - 2026-05-17
+- Refonte UI inspiree du `0to100-session-player-app` (fond sombre texture, cartes creme, accent orange).
+- Hero avec logo officiel 0 to 100.
+- Harmonisation visuelle des boutons, accordions mensuels et pied de page.
+
 ## [1.2.0] - 2026-05-17
 - Ajout barre de progression des entrainements coches.
 - Calendrier regroupe par mois avec accordions (mois courant ouvert par defaut).
