@@ -1,4 +1,4 @@
-const APP_VERSION = "2.0.0";
+const APP_VERSION = "2.1.0";
 
 const TRACKS = {
   "0to100": {
@@ -12,6 +12,37 @@ const TRACKS = {
     startDate: "2026-04-01"
   }
 };
+
+const EVENTS = [
+  {
+    label: "WE Choc #1",
+    start: "2026-05-23",
+    end:   "2026-05-25",
+    tracks: ["0to100", "0to40"],
+    type: "choc"
+  },
+  {
+    label: "ETC UTMB",
+    start: "2026-08-25",
+    end:   "2026-08-25",
+    tracks: ["0to100"],
+    type: "race"
+  },
+  {
+    label: "WE Choc #2",
+    start: "2026-10-24",
+    end:   "2026-10-25",
+    tracks: ["0to100", "0to40"],
+    type: "choc"
+  },
+  {
+    label: "WE Choc #3",
+    start: "2027-05-15",
+    end:   "2027-05-17",
+    tracks: ["0to100", "0to40"],
+    type: "choc"
+  }
+];
 
 const UTMB_SCENARIOS = {
   week1: {

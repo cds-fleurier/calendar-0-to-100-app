@@ -172,6 +172,26 @@
     return own(doneDays, key) ? Boolean(doneDays[key]) : isDefaultChecked(profile, day);
   }
 
+  /* ── Events ───────────────────────────────────────────────────────────── */
+
+  function buildEventMap(profile, startDate, endDate) {
+    const events = typeof EVENTS !== "undefined" && Array.isArray(EVENTS) ? EVENTS : [];
+    const map = {};
+    for (const ev of events) {
+      if (!ev.tracks.includes(profile.track)) continue;
+      const evStart = parseDate(ev.start);
+      const evEnd   = parseDate(ev.end);
+      const cursor  = new Date(evStart);
+      while (cursor <= evEnd) {
+        if (cursor >= startDate && cursor <= endDate) {
+          map[toDayKey(cursor)] = ev;
+        }
+        cursor.setDate(cursor.getDate() + 1);
+      }
+    }
+    return map;
+  }
+
   /* ── Streak ───────────────────────────────────────────────────────────── */
 
   function calculateStreak(profile, startDate, doneDays) {
@@ -279,6 +299,8 @@
     if (calendarMeta) calendarMeta.textContent =
       `Du ${formatDate(start)} au ${formatDate(end)} — ${totalDays} jours`;
 
+    const eventMap = buildEventMap(profile, start, end);
+
     /* Preserve open-month state */
     const openKeys = new Set();
     calendarList.querySelectorAll(".month-accordion").forEach((acc) => {
@@ -373,6 +395,16 @@
 
         cell.appendChild(topSpan);
         cell.appendChild(numSpan);
+
+        const ev = eventMap[dayKey];
+        if (ev) {
+          cell.classList.add(`day-cell--event-${ev.type}`);
+          const tag = document.createElement("span");
+          tag.className   = "event-tag";
+          tag.textContent = ev.label;
+          cell.appendChild(tag);
+        }
+
         cell.appendChild(checkbox);
         grid.appendChild(cell);
       }

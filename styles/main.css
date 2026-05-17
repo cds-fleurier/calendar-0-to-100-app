@@ -474,6 +474,50 @@ select:focus {
 .day-cell--future .day-number { color: #6b7a90; }
 .day-cell--future .day-label  { color: #4e5a6a; }
 
+/* ── Events ──────────────────────── */
+.day-cell--event-choc,
+.day-cell--event-race {
+  min-height: 66px;
+}
+
+.day-cell--event-choc::before,
+.day-cell--event-race::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.day-cell--event-choc::before { background: #5b8dee; }
+.day-cell--event-race::before  { background: #f5c518; }
+
+.event-tag {
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 4px;
+  border-radius: 3px;
+  margin-top: auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.day-cell--event-choc .event-tag {
+  background: rgba(91, 141, 238, 0.18);
+  color: #7ba8f0;
+}
+
+.day-cell--event-race .event-tag {
+  background: rgba(245, 197, 24, 0.16);
+  color: #f5c518;
+}
+
 /* ── State: out of range / padding */
 .day-cell--out {
   background: transparent;
