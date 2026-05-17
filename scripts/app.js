@@ -56,6 +56,12 @@
     }).format(date);
   }
 
+  function monthKey(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    return `${year}-${month}`;
+  }
+
   function weekdayLabel(date) {
     return new Intl.DateTimeFormat("fr-FR", { weekday: "short" }).format(date);
   }
@@ -161,6 +167,28 @@
     localStorage.setItem(doneStorageKey(profile), JSON.stringify(doneDays));
   }
 
+  function hasOwnKey(objectValue, key) {
+    return Object.prototype.hasOwnProperty.call(objectValue, key);
+  }
+
+  function isDefaultChecked(profile, day) {
+    const year = day.getFullYear();
+    const month = day.getMonth();
+    if (year !== 2026) {
+      return false;
+    }
+
+    if (profile.track === "0to100") {
+      return month === 2 || month === 3;
+    }
+
+    if (profile.track === "0to40") {
+      return month === 3;
+    }
+
+    return false;
+  }
+
   function renderCalendar(profile) {
     const track = safeTracks[profile.track];
     const scenario = safeUtmbScenarios[profile.utmbScenario];
@@ -177,7 +205,9 @@
     let doneCount = 0;
     const cursorCount = new Date(startDate);
     while (cursorCount <= targetDate) {
-      if (doneDays[toDayKey(cursorCount)]) {
+      const dayKey = toDayKey(cursorCount);
+      const checked = hasOwnKey(doneDays, dayKey) ? Boolean(doneDays[dayKey]) : isDefaultChecked(profile, cursorCount);
+      if (checked) {
         doneCount += 1;
       }
       cursorCount.setDate(cursorCount.getDate() + 1);
@@ -189,14 +219,34 @@
     calendarMeta.textContent = `Du ${formatDate(startDate)} au ${formatDate(targetDate)} (${totalDays} jours).`;
     calendarList.innerHTML = "";
 
+    const openMonthKeys = new Set();
+    const existingAccordions = calendarList.querySelectorAll(".month-accordion");
+    for (let index = 0; index < existingAccordions.length; index += 1) {
+      const accordion = existingAccordions[index];
+      if (accordion.open && accordion.dataset.monthKey) {
+        openMonthKeys.add(accordion.dataset.monthKey);
+      }
+    }
+
     const months = buildMonths(startDate, targetDate);
     const currentMonthDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    const hasCurrentMonth = months.some(function checkMonth(month) {
+      return isSameMonth(month.monthStart, currentMonthDate);
+    });
 
     for (let monthIndex = 0; monthIndex < months.length; monthIndex += 1) {
       const month = months[monthIndex];
       const details = document.createElement("details");
       details.className = "month-accordion";
-      details.open = isSameMonth(month.monthStart, currentMonthDate) || monthIndex === 0;
+      const thisMonthKey = monthKey(month.monthStart);
+      details.dataset.monthKey = thisMonthKey;
+      if (openMonthKeys.size > 0) {
+        details.open = openMonthKeys.has(thisMonthKey);
+      } else if (hasCurrentMonth) {
+        details.open = isSameMonth(month.monthStart, currentMonthDate);
+      } else {
+        details.open = monthIndex === 0;
+      }
 
       const summary = document.createElement("summary");
       summary.textContent = monthLabel(month.monthStart);
@@ -231,7 +281,7 @@
         checkbox.className = "day-checkbox";
         checkbox.type = "checkbox";
         const dayKey = toDayKey(day);
-        checkbox.checked = Boolean(doneDays[dayKey]);
+        checkbox.checked = hasOwnKey(doneDays, dayKey) ? Boolean(doneDays[dayKey]) : isDefaultChecked(profile, day);
         checkbox.addEventListener("change", function onToggle() {
           doneDays[dayKey] = checkbox.checked;
           setDoneDays(profile, doneDays);

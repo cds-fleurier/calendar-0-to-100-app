@@ -1,4 +1,4 @@
-const APP_VERSION = "1.2.2";
+const APP_VERSION = "1.2.4";
 
 const TRACKS = {
   "0to100": {
@@ -9,7 +9,7 @@ const TRACKS = {
   "0to40": {
     label: "0 to 40",
     race: "MCC",
-    startDate: "2026-04-06"
+    startDate: "2026-04-01"
   }
 };
 

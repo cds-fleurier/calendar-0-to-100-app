@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.2.4] - 2026-05-17
+- Date officielle mise a jour pour `0 to 40`: debut au 1er avril 2026.
+- Accordions calendrier corriges: un seul mois ouvert par defaut (mois courant) et conservation du mois ouvert apres coche/decochage.
+- Precochage par defaut: mars+avril 2026 pour `0 to 100`, avril 2026 pour `0 to 40`, sans ecraser les choix utilisateur deja enregistres.
+
 ## [1.2.2] - 2026-05-17
 - Correction bug JS bloquant (double declaration `now`) qui empechait le submit et l'affichage de version.
 - Reduction de la taille du logo dans le hero.
