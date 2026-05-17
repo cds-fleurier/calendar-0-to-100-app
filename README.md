@@ -7,12 +7,14 @@ Application web statique (HTML/CSS/JS vanilla), mobile-first, deployee sur GitHu
 - CSS3
 - JavaScript vanilla
 
-## Fonctionnalites V1.1.0
+## Fonctionnalites V1.2.0
 - Onboarding premiere visite: prenom + parcours (`0 to 100` ou `0 to 40`) + scenario UTMB.
 - Stockage local du profil via cookie.
 - Compteur de dodos restants jusqu'a la course.
 - Calendrier journalier avec case a cocher "entrainement du jour fait".
 - Persistance des cases cochees via `localStorage`.
+- Barre de progression globale des entrainements coches.
+- Calendrier mensuel en accordions avec grille de 7 jours et mois courant ouvert par defaut.
 
 ## Structure minimale
 - `index.html`

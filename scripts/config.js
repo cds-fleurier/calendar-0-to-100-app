@@ -1,4 +1,4 @@
-const APP_VERSION = "1.1.1";
+const APP_VERSION = "1.2.0";
 
 const TRACKS = {
   "0to100": {

@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.2.0] - 2026-05-17
+- Ajout barre de progression des entrainements coches.
+- Calendrier regroupe par mois avec accordions (mois courant ouvert par defaut).
+- Affichage en grille 7 jours par ligne et legende "Entrainement fait".
+
 ## [1.1.1] - 2026-05-17
 - Correction compatibilite cache: fallback si anciennes constantes JS chargees.
 - Evite le plantage au submit onboarding quand un ancien `config.js` est conserve en cache.

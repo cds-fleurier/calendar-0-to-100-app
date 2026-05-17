@@ -18,6 +18,8 @@
   const welcomeLine = document.getElementById("welcome-line");
   const projectLine = document.getElementById("project-line");
   const dodosLine = document.getElementById("dodos-line");
+  const progressLine = document.getElementById("progress-line");
+  const progressFill = document.getElementById("progress-fill");
   const calendarMeta = document.getElementById("calendar-meta");
   const calendarList = document.getElementById("calendar-list");
   const profileCookieName = "zero_to_100_profile";
@@ -45,6 +47,58 @@
       month: "2-digit",
       day: "2-digit"
     }).format(date);
+  }
+
+  function monthLabel(date) {
+    return new Intl.DateTimeFormat("fr-FR", {
+      month: "long",
+      year: "numeric"
+    }).format(date);
+  }
+
+  function weekdayLabel(date) {
+    return new Intl.DateTimeFormat("fr-FR", { weekday: "short" }).format(date);
+  }
+
+  function toDayKey(date) {
+    return date.toISOString().slice(0, 10);
+  }
+
+  function isSameMonth(left, right) {
+    return left.getFullYear() === right.getFullYear() && left.getMonth() === right.getMonth();
+  }
+
+  function toMondayBasedIndex(date) {
+    return (date.getDay() + 6) % 7;
+  }
+
+  function buildMonths(startDate, targetDate) {
+    const months = [];
+    const monthCursor = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+    while (monthCursor <= targetDate) {
+      const monthStart = new Date(monthCursor);
+      const monthEnd = new Date(monthCursor.getFullYear(), monthCursor.getMonth() + 1, 0);
+      const firstVisibleDay = new Date(monthStart);
+      firstVisibleDay.setDate(monthStart.getDate() - toMondayBasedIndex(monthStart));
+
+      const lastVisibleDay = new Date(monthEnd);
+      lastVisibleDay.setDate(monthEnd.getDate() + (6 - toMondayBasedIndex(monthEnd)));
+
+      const days = [];
+      const dayCursor = new Date(firstVisibleDay);
+      while (dayCursor <= lastVisibleDay) {
+        days.push(new Date(dayCursor));
+        dayCursor.setDate(dayCursor.getDate() + 1);
+      }
+
+      months.push({
+        monthStart,
+        monthEnd,
+        days
+      });
+      monthCursor.setMonth(monthCursor.getMonth() + 1);
+    }
+    return months;
   }
 
   function setCookie(name, value, days) {
@@ -119,32 +173,80 @@
     welcomeLine.textContent = `Salut ${profile.firstName}.`;
     projectLine.textContent = `${track.label} -> course ${track.race} | cible: ${scenario.label}`;
     dodosLine.textContent = `${dodosLeft} dodos restants jusqu'a la course (${track.race}).`;
-
     const totalDays = Math.max(0, daysDiff(startDate, targetDate) + 1);
+    let doneCount = 0;
+    const cursorCount = new Date(startDate);
+    while (cursorCount <= targetDate) {
+      if (doneDays[toDayKey(cursorCount)]) {
+        doneCount += 1;
+      }
+      cursorCount.setDate(cursorCount.getDate() + 1);
+    }
+    const progressPct = totalDays > 0 ? Math.round((doneCount / totalDays) * 100) : 0;
+    progressLine.textContent = `${doneCount}/${totalDays} entrainements coches (${progressPct}%).`;
+    progressFill.style.width = `${progressPct}%`;
+
     calendarMeta.textContent = `Du ${formatDate(startDate)} au ${formatDate(targetDate)} (${totalDays} jours).`;
     calendarList.innerHTML = "";
 
-    const cursor = new Date(startDate);
-    while (cursor <= targetDate) {
-      const dayKey = cursor.toISOString().slice(0, 10);
-      const row = document.createElement("label");
-      row.className = "day-row";
+    const months = buildMonths(startDate, targetDate);
+    const now = new Date();
+    const currentMonthDate = new Date(now.getFullYear(), now.getMonth(), 1);
 
-      const dateLabel = document.createElement("span");
-      dateLabel.textContent = formatDate(cursor);
+    for (let monthIndex = 0; monthIndex < months.length; monthIndex += 1) {
+      const month = months[monthIndex];
+      const details = document.createElement("details");
+      details.className = "month-accordion";
+      details.open = isSameMonth(month.monthStart, currentMonthDate) || monthIndex === 0;
 
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.checked = Boolean(doneDays[dayKey]);
-      checkbox.addEventListener("change", function onToggle() {
-        doneDays[dayKey] = checkbox.checked;
-        setDoneDays(profile, doneDays);
-      });
+      const summary = document.createElement("summary");
+      summary.textContent = monthLabel(month.monthStart);
+      details.appendChild(summary);
 
-      row.appendChild(dateLabel);
-      row.appendChild(checkbox);
-      calendarList.appendChild(row);
-      cursor.setDate(cursor.getDate() + 1);
+      const grid = document.createElement("div");
+      grid.className = "month-grid";
+
+      for (let dayIndex = 0; dayIndex < month.days.length; dayIndex += 1) {
+        const day = month.days[dayIndex];
+        const cell = document.createElement("label");
+        cell.className = "day-cell";
+
+        const isInMonth = isSameMonth(day, month.monthStart);
+        const isInProject = day >= startDate && day <= targetDate;
+        if (!isInMonth || !isInProject) {
+          cell.classList.add("empty");
+          cell.innerHTML = "<span></span>";
+          grid.appendChild(cell);
+          continue;
+        }
+
+        const dayTop = document.createElement("span");
+        dayTop.className = "day-label";
+        dayTop.textContent = weekdayLabel(day);
+
+        const dayNumber = document.createElement("span");
+        dayNumber.className = "day-number";
+        dayNumber.textContent = String(day.getDate());
+
+        const checkbox = document.createElement("input");
+        checkbox.className = "day-checkbox";
+        checkbox.type = "checkbox";
+        const dayKey = toDayKey(day);
+        checkbox.checked = Boolean(doneDays[dayKey]);
+        checkbox.addEventListener("change", function onToggle() {
+          doneDays[dayKey] = checkbox.checked;
+          setDoneDays(profile, doneDays);
+          renderCalendar(profile);
+        });
+
+        cell.appendChild(dayTop);
+        cell.appendChild(dayNumber);
+        cell.appendChild(checkbox);
+        grid.appendChild(cell);
+      }
+
+      details.appendChild(grid);
+      calendarList.appendChild(details);
     }
   }
 
