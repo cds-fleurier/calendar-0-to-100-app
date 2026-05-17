@@ -22,6 +22,7 @@
   const progressFill = document.getElementById("progress-fill");
   const calendarMeta = document.getElementById("calendar-meta");
   const calendarList = document.getElementById("calendar-list");
+  const celebrationLayer = document.getElementById("celebration-layer");
   const profileCookieName = "zero_to_100_profile";
   const doneStoragePrefix = "zero_to_100_days_done";
 
@@ -105,6 +106,36 @@
       monthCursor.setMonth(monthCursor.getMonth() + 1);
     }
     return months;
+  }
+
+  function showCelebration() {
+    if (!celebrationLayer) {
+      return;
+    }
+
+    celebrationLayer.classList.remove("hidden");
+    celebrationLayer.innerHTML = "";
+
+    const message = document.createElement("div");
+    message.className = "celebration-message";
+    message.textContent = "Bravo!";
+    celebrationLayer.appendChild(message);
+
+    for (let index = 0; index < 18; index += 1) {
+      const spark = document.createElement("span");
+      spark.className = "spark";
+      spark.style.left = `${Math.random() * 100}%`;
+      spark.style.top = `${30 + Math.random() * 45}%`;
+      spark.style.setProperty("--dx", `${(Math.random() - 0.5) * 220}px`);
+      spark.style.setProperty("--dy", `${-(60 + Math.random() * 140)}px`);
+      spark.style.setProperty("--delay", `${Math.random() * 0.18}s`);
+      celebrationLayer.appendChild(spark);
+    }
+
+    window.setTimeout(function hideCelebration() {
+      celebrationLayer.classList.add("hidden");
+      celebrationLayer.innerHTML = "";
+    }, 1100);
   }
 
   function setCookie(name, value, days) {
@@ -283,8 +314,12 @@
         const dayKey = toDayKey(day);
         checkbox.checked = hasOwnKey(doneDays, dayKey) ? Boolean(doneDays[dayKey]) : isDefaultChecked(profile, day);
         checkbox.addEventListener("change", function onToggle() {
+          const wasChecked = hasOwnKey(doneDays, dayKey) ? Boolean(doneDays[dayKey]) : isDefaultChecked(profile, day);
           doneDays[dayKey] = checkbox.checked;
           setDoneDays(profile, doneDays);
+          if (!wasChecked && checkbox.checked) {
+            showCelebration();
+          }
           renderCalendar(profile);
         });
 

@@ -269,6 +269,64 @@ button.secondary {
   padding: 12px 14px;
 }
 
+.celebration-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+}
+
+.celebration-message {
+  position: absolute;
+  left: 50%;
+  top: 28%;
+  transform: translateX(-50%);
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: linear-gradient(160deg, var(--accent), var(--accent-strong));
+  color: #fff;
+  font-weight: 900;
+  letter-spacing: 0.3px;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.28);
+  animation: pop-message 0.9s ease-out forwards;
+}
+
+.spark {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: radial-gradient(circle, #fff 0%, #ffd072 45%, var(--accent) 100%);
+  opacity: 0;
+  animation: firework 0.9s ease-out var(--delay) forwards;
+}
+
+@keyframes firework {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(0.6);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy)) scale(1.25);
+  }
+}
+
+@keyframes pop-message {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(12px) scale(0.94);
+  }
+  20% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-16px) scale(1.02);
+  }
+}
+
 @media (max-width: 720px) {
   h1 {
     font-size: 1.65rem;

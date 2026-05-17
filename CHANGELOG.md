@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.3.0] - 2026-05-17
+- Ajout animation de celebration a chaque nouveau jour coche manuellement (feu d'artifice + message "Bravo!").
+- Aucun declenchement sur les jours precoches par defaut.
+
+
 ## [1.2.4] - 2026-05-17
 - Date officielle mise a jour pour `0 to 40`: debut au 1er avril 2026.
 - Accordions calendrier corriges: un seul mois ouvert par defaut (mois courant) et conservation du mois ouvert apres coche/decochage.
