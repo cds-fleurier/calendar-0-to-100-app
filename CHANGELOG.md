@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.2.2] - 2026-05-17
+- Correction bug JS bloquant (double declaration `now`) qui empechait le submit et l'affichage de version.
+- Reduction de la taille du logo dans le hero.
+
 ## [1.2.1] - 2026-05-17
 - Refonte UI inspiree du `0to100-session-player-app` (fond sombre texture, cartes creme, accent orange).
 - Hero avec logo officiel 0 to 100.

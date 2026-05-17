@@ -190,7 +190,6 @@
     calendarList.innerHTML = "";
 
     const months = buildMonths(startDate, targetDate);
-    const now = new Date();
     const currentMonthDate = new Date(now.getFullYear(), now.getMonth(), 1);
 
     for (let monthIndex = 0; monthIndex < months.length; monthIndex += 1) {

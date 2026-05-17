@@ -56,7 +56,7 @@ button {
 }
 
 .brand-logo {
-  width: min(240px, 72%);
+  width: min(130px, 34%);
   height: auto;
   display: block;
   filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.35));
