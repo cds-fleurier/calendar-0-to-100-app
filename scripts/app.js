@@ -118,24 +118,53 @@
 
     const message = document.createElement("div");
     message.className = "celebration-message";
-    message.textContent = "Bravo!";
+    message.textContent = "BRAVO!";
     celebrationLayer.appendChild(message);
 
-    for (let index = 0; index < 18; index += 1) {
-      const spark = document.createElement("span");
-      spark.className = "spark";
-      spark.style.left = `${Math.random() * 100}%`;
-      spark.style.top = `${30 + Math.random() * 45}%`;
-      spark.style.setProperty("--dx", `${(Math.random() - 0.5) * 220}px`);
-      spark.style.setProperty("--dy", `${-(60 + Math.random() * 140)}px`);
-      spark.style.setProperty("--delay", `${Math.random() * 0.18}s`);
-      celebrationLayer.appendChild(spark);
+    const bursts = [
+      { x: 24, y: 64, delay: 0 },
+      { x: 50, y: 54, delay: 0.08 },
+      { x: 76, y: 64, delay: 0.16 }
+    ];
+
+    for (let burstIndex = 0; burstIndex < bursts.length; burstIndex += 1) {
+      const burst = bursts[burstIndex];
+
+      const ring = document.createElement("span");
+      ring.className = "burst-ring";
+      ring.style.left = `${burst.x}%`;
+      ring.style.top = `${burst.y}%`;
+      ring.style.setProperty("--delay", `${burst.delay}s`);
+      celebrationLayer.appendChild(ring);
+
+      for (let index = 0; index < 36; index += 1) {
+        const spark = document.createElement("span");
+        spark.className = "spark";
+        spark.style.left = `${burst.x}%`;
+        spark.style.top = `${burst.y}%`;
+        spark.style.setProperty("--dx", `${(Math.random() - 0.5) * 420}px`);
+        spark.style.setProperty("--dy", `${(Math.random() - 0.65) * 320}px`);
+        spark.style.setProperty("--delay", `${burst.delay + Math.random() * 0.2}s`);
+        celebrationLayer.appendChild(spark);
+      }
+
+      for (let confettiIndex = 0; confettiIndex < 24; confettiIndex += 1) {
+        const confetti = document.createElement("span");
+        confetti.className = "confetti";
+        confetti.style.left = `${burst.x + (Math.random() - 0.5) * 12}%`;
+        confetti.style.top = `${burst.y - 8 + Math.random() * 6}%`;
+        confetti.style.setProperty("--dx", `${(Math.random() - 0.5) * 260}px`);
+        confetti.style.setProperty("--dy", `${140 + Math.random() * 220}px`);
+        confetti.style.setProperty("--rot", `${Math.random() * 620}deg`);
+        confetti.style.setProperty("--delay", `${burst.delay + 0.06 + Math.random() * 0.24}s`);
+        celebrationLayer.appendChild(confetti);
+      }
     }
 
     window.setTimeout(function hideCelebration() {
       celebrationLayer.classList.add("hidden");
       celebrationLayer.innerHTML = "";
-    }, 1100);
+    }, 1800);
   }
 
   function setCookie(name, value, days) {

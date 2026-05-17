@@ -274,41 +274,89 @@ button.secondary {
   inset: 0;
   pointer-events: none;
   z-index: 50;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 210, 140, 0.18), transparent 45%);
 }
 
 .celebration-message {
   position: absolute;
   left: 50%;
-  top: 28%;
+  top: 18%;
   transform: translateX(-50%);
-  padding: 10px 16px;
+  padding: 12px 22px;
   border-radius: 999px;
   background: linear-gradient(160deg, var(--accent), var(--accent-strong));
   color: #fff;
   font-weight: 900;
-  letter-spacing: 0.3px;
-  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.28);
-  animation: pop-message 0.9s ease-out forwards;
+  font-size: 1.25rem;
+  letter-spacing: 0.08em;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35);
+  animation: pop-message 1.5s ease-out forwards;
 }
 
 .spark {
   position: absolute;
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 999px;
   background: radial-gradient(circle, #fff 0%, #ffd072 45%, var(--accent) 100%);
   opacity: 0;
-  animation: firework 0.9s ease-out var(--delay) forwards;
+  box-shadow: 0 0 16px rgba(255, 137, 46, 0.9);
+  animation: firework 1.25s cubic-bezier(0.12, 0.72, 0.24, 1) var(--delay) forwards;
+}
+
+.burst-ring {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 3px solid rgba(255, 214, 158, 0.9);
+  transform: translate(-50%, -50%) scale(0.3);
+  opacity: 0;
+  animation: burst-ring 0.95s ease-out var(--delay) forwards;
+}
+
+.confetti {
+  position: absolute;
+  width: 8px;
+  height: 16px;
+  border-radius: 2px;
+  opacity: 0;
+  background: linear-gradient(180deg, #fff3c4, #ff8f3b);
+  transform: translate(0, 0) rotate(0deg);
+  animation: confetti-fall 1.35s ease-in var(--delay) forwards;
 }
 
 @keyframes firework {
   0% {
     opacity: 1;
-    transform: translate(0, 0) scale(0.6);
+    transform: translate(0, 0) scale(0.45);
   }
   100% {
     opacity: 0;
-    transform: translate(var(--dx), var(--dy)) scale(1.25);
+    transform: translate(var(--dx), var(--dy)) scale(1.45);
+  }
+}
+
+@keyframes burst-ring {
+  0% {
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(0.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(8.2);
+  }
+}
+
+@keyframes confetti-fall {
+  0% {
+    opacity: 0.95;
+    transform: translate(0, 0) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy)) rotate(var(--rot));
   }
 }
 
@@ -323,7 +371,7 @@ button.secondary {
   }
   100% {
     opacity: 0;
-    transform: translateX(-50%) translateY(-16px) scale(1.02);
+    transform: translateX(-50%) translateY(-32px) scale(1.04);
   }
 }
 

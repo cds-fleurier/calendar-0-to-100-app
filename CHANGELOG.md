@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.3.1] - 2026-05-17
+- Celebration upgrade "all in": multi-bursts, sparks plus nombreux, ondes d'explosion, confettis et message BRAVO renforce.
+
+
 ## [1.3.0] - 2026-05-17
 - Ajout animation de celebration a chaque nouveau jour coche manuellement (feu d'artifice + message "Bravo!").
 - Aucun declenchement sur les jours precoches par defaut.
