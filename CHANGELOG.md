@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.1.1] - 2026-05-17
+- Correction compatibilite cache: fallback si anciennes constantes JS chargees.
+- Evite le plantage au submit onboarding quand un ancien `config.js` est conserve en cache.
+
 ## [1.1.0] - 2026-05-17
 - Ajout onboarding premiere visite (prenom, parcours, scenario UTMB 2027).
 - Stockage du profil en cookie local.

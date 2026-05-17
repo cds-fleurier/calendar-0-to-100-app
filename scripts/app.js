@@ -1,4 +1,14 @@
 (function runApp() {
+  const safeAppVersion = typeof APP_VERSION === "string" ? APP_VERSION : "1.0.0";
+  const safeTracks = typeof TRACKS === "object" && TRACKS ? TRACKS : {
+    "0to100": { label: "0 to 100", race: "CCC", startDate: "2026-03-02" },
+    "0to40": { label: "0 to 40", race: "MCC", startDate: "2026-04-06" }
+  };
+  const safeUtmbScenarios = typeof UTMB_SCENARIOS === "object" && UTMB_SCENARIOS ? UTMB_SCENARIOS : {
+    week1: { label: "23 aout 2027 au 29 aout 2027", targetDate: "2027-08-29" },
+    week2: { label: "30 aout 2027 au 5 septembre 2027", targetDate: "2027-09-05" }
+  };
+
   const versionNode = document.getElementById("app-version");
   const onboardingCard = document.getElementById("onboarding-card");
   const trackerCard = document.getElementById("tracker-card");
@@ -14,7 +24,7 @@
   const doneStoragePrefix = "zero_to_100_days_done";
 
   if (versionNode) {
-    versionNode.textContent = APP_VERSION;
+    versionNode.textContent = safeAppVersion;
   }
 
   function parseDate(dateString) {
@@ -60,7 +70,7 @@
     }
     try {
       const parsed = JSON.parse(raw);
-      if (!parsed.firstName || !TRACKS[parsed.track] || !UTMB_SCENARIOS[parsed.utmbScenario]) {
+      if (!parsed.firstName || !safeTracks[parsed.track] || !safeUtmbScenarios[parsed.utmbScenario]) {
         return null;
       }
       return parsed;
@@ -98,8 +108,8 @@
   }
 
   function renderCalendar(profile) {
-    const track = TRACKS[profile.track];
-    const scenario = UTMB_SCENARIOS[profile.utmbScenario];
+    const track = safeTracks[profile.track];
+    const scenario = safeUtmbScenarios[profile.utmbScenario];
     const startDate = parseDate(track.startDate);
     const targetDate = parseDate(scenario.targetDate);
     const now = new Date();
@@ -157,7 +167,7 @@
     const firstName = String(formData.get("firstName") || "").trim();
     const track = String(formData.get("track") || "");
     const utmbScenario = String(formData.get("utmbScenario") || "");
-    if (!firstName || !TRACKS[track] || !UTMB_SCENARIOS[utmbScenario]) {
+    if (!firstName || !safeTracks[track] || !safeUtmbScenarios[utmbScenario]) {
       return;
     }
     const profile = { firstName, track, utmbScenario };
