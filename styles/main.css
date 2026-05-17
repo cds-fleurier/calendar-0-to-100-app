@@ -1,0 +1,86 @@
+:root {
+  --bg: #f7f3eb;
+  --surface: #fff9ef;
+  --ink: #111111;
+  --accent: #d95f31;
+  --accent-2: #f2b441;
+  --muted: #5a5a5a;
+  --radius: 16px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+  color: var(--ink);
+  background: radial-gradient(circle at 20% 10%, var(--accent-2), transparent 30%), var(--bg);
+}
+
+.app-shell {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 20px;
+  display: grid;
+  gap: 16px;
+}
+
+.hero {
+  background: linear-gradient(130deg, var(--accent) 0%, #b84a23 100%);
+  color: #ffffff;
+  padding: 24px;
+  border-radius: var(--radius);
+}
+
+.kicker {
+  margin: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+}
+
+h1 {
+  margin: 8px 0;
+  font-size: 2rem;
+}
+
+.subtitle {
+  margin: 0;
+  opacity: 0.95;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid #e8dcc6;
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.card h2 {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+}
+
+.app-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.95rem;
+  color: var(--muted);
+  background: #ffffff;
+  border: 1px solid #ece2ce;
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+@media (min-width: 768px) {
+  .app-shell {
+    padding: 32px;
+  }
+
+  h1 {
+    font-size: 2.4rem;
+  }
+}
