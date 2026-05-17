@@ -20,6 +20,18 @@ body {
   background: radial-gradient(circle at 20% 10%, var(--accent-2), transparent 30%), var(--bg);
 }
 
+label {
+  display: block;
+  font-weight: 600;
+  margin: 0 0 6px;
+}
+
+input,
+select,
+button {
+  font: inherit;
+}
+
 .app-shell {
   max-width: 760px;
   margin: 0 auto;
@@ -46,6 +58,10 @@ h1 {
   font-size: 2rem;
 }
 
+h2 {
+  margin: 0 0 12px;
+}
+
 .subtitle {
   margin: 0;
   opacity: 0.95;
@@ -59,8 +75,69 @@ h1 {
 }
 
 .card h2 {
-  margin: 0 0 8px;
   font-size: 1.1rem;
+}
+
+#onboarding-form {
+  display: grid;
+  gap: 10px;
+}
+
+input,
+select {
+  width: 100%;
+  border: 1px solid #d9ccb5;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 10px 12px;
+}
+
+button {
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  background: var(--accent);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+button.secondary {
+  background: #f4ead8;
+  color: var(--ink);
+}
+
+.hidden {
+  display: none;
+}
+
+.dodos {
+  margin: 12px 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #8e2f10;
+}
+
+.calendar-list {
+  display: grid;
+  gap: 8px;
+  max-height: 55dvh;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.day-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid #e8dcc6;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 10px 12px;
+}
+
+.day-row span {
+  font-size: 0.95rem;
 }
 
 .app-footer {

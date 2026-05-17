@@ -10,14 +10,45 @@
   <body>
     <main class="app-shell">
       <header class="hero">
-        <p class="kicker">TEAM HUB</p>
+        <p class="kicker">TEAM TRACKER</p>
         <h1>0 to 100</h1>
-        <p class="subtitle">Progression, sessions, momentum.</p>
+        <p class="subtitle">Compteur de dodos + calendrier d'entrainement.</p>
       </header>
 
-      <section class="card" aria-labelledby="status-title">
-        <h2 id="status-title">Statut</h2>
-        <p>Application V1 en ligne.</p>
+      <section id="onboarding-card" class="card" aria-labelledby="onboarding-title">
+        <h2 id="onboarding-title">Premiere visite</h2>
+        <form id="onboarding-form">
+          <label for="first-name">Prenom</label>
+          <input id="first-name" name="firstName" type="text" maxlength="40" required />
+
+          <label for="track">Parcours</label>
+          <select id="track" name="track" required>
+            <option value="0to100">0 to 100 (CCC)</option>
+            <option value="0to40">0 to 40 (MCC)</option>
+          </select>
+
+          <label for="utmb-scenario">Semaine UTMB 2027 (provisoire)</label>
+          <select id="utmb-scenario" name="utmbScenario" required>
+            <option value="week1">23 aout 2027 au 29 aout 2027</option>
+            <option value="week2">30 aout 2027 au 5 septembre 2027</option>
+          </select>
+
+          <button type="submit">Commencer</button>
+        </form>
+      </section>
+
+      <section id="tracker-card" class="card hidden" aria-labelledby="tracker-title">
+        <h2 id="tracker-title">Suivi personnel</h2>
+        <p id="welcome-line"></p>
+        <p id="project-line"></p>
+        <p id="dodos-line" class="dodos"></p>
+        <button id="reset-profile" type="button" class="secondary">Modifier mon profil</button>
+      </section>
+
+      <section id="calendar-card" class="card hidden" aria-labelledby="calendar-title">
+        <h2 id="calendar-title">Calendrier d'entrainement</h2>
+        <p id="calendar-meta"></p>
+        <div id="calendar-list" class="calendar-list"></div>
       </section>
 
       <footer class="app-footer">
