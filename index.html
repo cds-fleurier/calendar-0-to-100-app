@@ -3,69 +3,94 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>0 to 100 - Team App</title>
+    <title>0 to 100 — Team App</title>
     <meta name="description" content="App web officielle de la team 0 to 100" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles/main.css" />
   </head>
   <body>
     <main class="app-shell">
+
       <header class="hero">
         <img
           class="brand-logo"
           src="https://0-to-100.gs-paths.fr/wp-content/uploads/2025/02/0-to-100-Logo-Bleu-RVB.png"
           alt="Logo 0 to 100"
         />
-        <p class="kicker">TEAM TRACKER</p>
-        <h1>Projet 0 to 100</h1>
-        <p class="subtitle">Compteur de dodos + calendrier d'entrainement.</p>
+        <p class="kicker">Team Tracker</p>
       </header>
 
-      <section id="onboarding-card" class="card" aria-labelledby="onboarding-title">
-        <h2 id="onboarding-title">Premiere visite</h2>
+      <section id="onboarding-card" class="glass-card" aria-labelledby="onboarding-title">
+        <h2 id="onboarding-title">Première visite</h2>
         <form id="onboarding-form">
-          <label for="first-name">Prenom</label>
-          <input id="first-name" name="firstName" type="text" maxlength="40" required />
-
-          <label for="track">Parcours</label>
-          <select id="track" name="track" required>
-            <option value="0to100">0 to 100 (CCC)</option>
-            <option value="0to40">0 to 40 (MCC)</option>
-          </select>
-
-          <label for="utmb-scenario">Semaine UTMB 2027 (provisoire)</label>
-          <select id="utmb-scenario" name="utmbScenario" required>
-            <option value="week1">23 aout 2027 au 29 aout 2027</option>
-            <option value="week2">30 aout 2027 au 5 septembre 2027</option>
-          </select>
-
-          <button type="submit">Commencer</button>
+          <div class="field">
+            <label for="first-name">Prénom</label>
+            <input id="first-name" name="firstName" type="text" maxlength="40" required placeholder="Ton prénom" />
+          </div>
+          <div class="field">
+            <label for="track">Parcours</label>
+            <select id="track" name="track" required>
+              <option value="0to100">0 to 100 (CCC)</option>
+              <option value="0to40">0 to 40 (MCC)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="utmb-scenario">Semaine UTMB 2027</label>
+            <select id="utmb-scenario" name="utmbScenario" required>
+              <option value="week1">23 — 29 août 2027</option>
+              <option value="week2">30 août — 5 sept. 2027</option>
+            </select>
+          </div>
+          <button type="submit" class="btn-primary">C'est parti →</button>
         </form>
       </section>
 
-      <section id="tracker-card" class="card hidden" aria-labelledby="tracker-title">
-        <h2 id="tracker-title">Suivi personnel</h2>
-        <p id="welcome-line"></p>
-        <p id="project-line"></p>
-        <p id="dodos-line" class="dodos"></p>
-        <p id="progress-line" class="progress-line"></p>
-        <div class="progress-track" aria-hidden="true">
-          <div id="progress-fill" class="progress-fill"></div>
+      <section id="tracker-card" class="glass-card hidden">
+        <div class="stats-row">
+          <div class="ring-container">
+            <svg class="ring-svg" viewBox="0 0 120 120" aria-hidden="true">
+              <circle class="ring-track" cx="60" cy="60" r="52" />
+              <circle class="ring-fill" id="progress-ring" cx="60" cy="60" r="52" />
+            </svg>
+            <div class="ring-inner">
+              <span class="ring-pct" id="progress-pct">0%</span>
+              <span class="ring-sublabel">complété</span>
+            </div>
+          </div>
+          <div class="stats-aside">
+            <div class="stat-block">
+              <span class="stat-val" id="dodos-value">—</span>
+              <span class="stat-lbl">dodos</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-block">
+              <span class="stat-val" id="streak-value">0</span>
+              <span class="stat-lbl">streak</span>
+            </div>
+          </div>
         </div>
-        <button id="reset-profile" type="button" class="secondary">Modifier mon profil</button>
+        <div class="profile-meta">
+          <p id="welcome-line"></p>
+          <p id="project-line"></p>
+        </div>
+        <button id="reset-profile" type="button" class="btn-ghost">Modifier mon profil</button>
       </section>
 
-      <section id="calendar-card" class="card hidden" aria-labelledby="calendar-title">
-        <h2 id="calendar-title">Calendrier d'entrainement</h2>
-        <p id="calendar-meta"></p>
-        <p class="legend"><span class="legend-box"></span> Entrainement fait</p>
+      <section id="calendar-card" class="glass-card hidden" aria-labelledby="calendar-title">
+        <h2 id="calendar-title">Calendrier</h2>
+        <p id="calendar-meta" class="calendar-meta-line"></p>
         <div id="calendar-list" class="calendar-list"></div>
       </section>
 
       <footer class="app-footer">
-        <span>Version</span>
-        <strong id="app-version" aria-live="polite"></strong>
+        <span>v<strong id="app-version"></strong></span>
+        <span>0 to 100 Team</span>
       </footer>
+
     </main>
+
     <div id="celebration-layer" class="celebration-layer hidden" aria-live="polite"></div>
 
     <script src="scripts/config.js"></script>

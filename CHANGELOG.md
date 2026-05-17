@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.0.0] - 2026-05-17
+- Refonte UI complète "Dark Altitude" : fond ultra-sombre, glassmorphism, Inter + Barlow Condensed.
+- Stats héros : anneau de progression SVG animé, dodos et streak en grands chiffres.
+- Streak counter : jours consécutifs cochés calculés en temps réel.
+- Cellules calendrier : tap sur toute la cellule, états visuels distincts (done / today / missed / future).
+- Entête des jours de la semaine dans chaque grille mensuelle.
+- Suppression des éléments UI verbeux (barre linéaire, texte redondant).
+
+
 ## [1.3.1] - 2026-05-17
 - Celebration upgrade "all in": multi-bursts, sparks plus nombreux, ondes d'explosion, confettis et message BRAVO renforce.
 

@@ -1,4 +1,4 @@
-const APP_VERSION = "1.3.1";
+const APP_VERSION = "2.0.0";
 
 const TRACKS = {
   "0to100": {
@@ -15,11 +15,11 @@ const TRACKS = {
 
 const UTMB_SCENARIOS = {
   week1: {
-    label: "23 aout 2027 au 29 aout 2027",
+    label: "23 août 2027 au 29 août 2027",
     targetDate: "2027-08-29"
   },
   week2: {
-    label: "30 aout 2027 au 5 septembre 2027",
+    label: "30 août 2027 au 5 sept. 2027",
     targetDate: "2027-09-05"
   }
 };
