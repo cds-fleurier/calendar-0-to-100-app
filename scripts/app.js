@@ -303,7 +303,7 @@
 
     /* Stats */
     if (dodosValue)    dodosValue.textContent  = String(dodosLeft);
-    if (dodosRaceLbl)  dodosRaceLbl.textContent = `jusqu'à la ${track.race} 2027`;
+    if (dodosRaceLbl)  dodosRaceLbl.textContent = `dodos jusqu'à la ${track.race} 2027`;
     if (streakValue)   streakValue.textContent  = String(streak);
     if (progressPctEl) progressPctEl.textContent = `${pct}%`;
     if (progressRing)  progressRing.style.strokeDashoffset = (RING_CIRC * (1 - pct / 100)).toFixed(2);
