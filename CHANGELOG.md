@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.2.0] - 2026-06-09
+- Double compteur dodos : "jusqu'à l'ETC 2026" (0to100 uniquement, masqué après la course) + "jusqu'à la CCC/MCC 2027".
+- Label dynamique selon le parcours (CCC ou MCC).
+- CSS compact automatique quand les 3 blocs sont affichés.
+
 ## [2.1.0] - 2026-05-17
 - Label "dodos restants" dans le header stats.
 - Événements clés dans le calendrier : WE Choc #1 (23-25 mai 2026), ETC UTMB (25 août 2026, 0to100), WE Choc #2 (24-25 oct. 2026), WE Choc #3 (15-17 mai 2027).

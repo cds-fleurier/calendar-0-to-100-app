@@ -21,6 +21,11 @@
   const welcomeLine    = document.getElementById("welcome-line");
   const projectLine    = document.getElementById("project-line");
   const dodosValue     = document.getElementById("dodos-value");
+  const dodosRaceLbl   = document.getElementById("dodos-race-lbl");
+  const dodosEtcBlock  = document.getElementById("dodos-etc-block");
+  const dodosEtcDiv    = document.getElementById("dodos-etc-divider");
+  const dodosEtcValue  = document.getElementById("dodos-etc-value");
+  const statsAside     = document.getElementById("stats-aside");
   const streakValue    = document.getElementById("streak-value");
   const progressRing   = document.getElementById("progress-ring");
   const progressPctEl  = document.getElementById("progress-pct");
@@ -287,8 +292,18 @@
     }
     const pct = totalDays > 0 ? Math.round((doneCount / totalDays) * 100) : 0;
 
+    /* ETC 2026 countdown (0to100 only, until the day of the race) */
+    const etcDate  = parseDate("2026-08-25");
+    const showEtc  = profile.track === "0to100" && daysDiff(now, etcDate) > 0;
+    const dodosEtc = showEtc ? daysDiff(now, etcDate) : 0;
+    if (statsAside)    statsAside.classList.toggle("stats-aside--has-etc", showEtc);
+    if (dodosEtcBlock) dodosEtcBlock.classList.toggle("hidden", !showEtc);
+    if (dodosEtcDiv)   dodosEtcDiv.classList.toggle("hidden", !showEtc);
+    if (dodosEtcValue && showEtc) dodosEtcValue.textContent = String(dodosEtc);
+
     /* Stats */
     if (dodosValue)    dodosValue.textContent  = String(dodosLeft);
+    if (dodosRaceLbl)  dodosRaceLbl.textContent = `jusqu'à la ${track.race} 2027`;
     if (streakValue)   streakValue.textContent  = String(streak);
     if (progressPctEl) progressPctEl.textContent = `${pct}%`;
     if (progressRing)  progressRing.style.strokeDashoffset = (RING_CIRC * (1 - pct / 100)).toFixed(2);
