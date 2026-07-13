@@ -300,6 +300,192 @@ select:focus {
   line-height: 1.6;
 }
 
+/* ─── Countdown ETC 2026 ─────────────────────────────────────────────────── */
+.countdown-card {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(245, 197, 24, 0.18);
+}
+
+.countdown-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px -1px auto -1px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #f5c518, var(--accent), transparent);
+  opacity: 0.85;
+}
+
+.countdown-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.countdown-flag {
+  font-size: 1.7rem;
+  line-height: 1;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+}
+
+.countdown-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #f5c518;
+  margin-bottom: 2px;
+}
+
+.countdown-sub {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--text-soft);
+}
+
+.countdown-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.cd-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 4px 10px;
+  border-radius: var(--radius);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015));
+  border: 1px solid var(--border);
+}
+
+.cd-num {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 2.4rem;
+  font-weight: 900;
+  line-height: 1;
+  color: #fff;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.cd-lbl {
+  font-size: 0.56rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* "JOUR J" state */
+.countdown-go {
+  display: none;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-align: center;
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+
+.countdown-card--go .countdown-grid { display: none; }
+.countdown-card--go .countdown-go   { display: block; }
+
+/* Map */
+.countdown-map {
+  position: relative;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border-hi);
+  background: #0b1017;
+}
+
+.countdown-map iframe {
+  display: block;
+  width: 100%;
+  height: 180px;
+  border: 0;
+  filter: invert(0.92) hue-rotate(180deg) brightness(0.95) contrast(0.9) saturate(0.8);
+}
+
+.map-pin {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.3), 0 0 14px var(--accent);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.map-pin::after {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  animation: map-pulse 2.2s ease-out infinite;
+}
+
+@keyframes map-pulse {
+  0%   { transform: scale(0.6); opacity: 0.9; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+
+.map-place {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, 14px);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(7, 9, 14, 0.72);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  z-index: 2;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.countdown-map-link {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  z-index: 3;
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  color: var(--text);
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: rgba(7, 9, 14, 0.78);
+  border: 1px solid var(--border-hi);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: border-color 150ms, color 150ms;
+}
+
+.countdown-map-link:hover {
+  border-color: var(--accent);
+  color: #fff;
+}
+
 /* ─── Calendar card ──────────────────────────────────────────────────────── */
 .calendar-meta-line {
   font-size: 0.75rem;
@@ -640,4 +826,10 @@ select:focus {
   .day-cell   { min-height: 48px; padding: 5px 4px; }
   .day-number { font-size: 0.92rem; }
   .day-label  { font-size: 0.52rem; }
+
+  .countdown-grid { gap: 6px; }
+  .cd-unit  { padding: 10px 2px 8px; }
+  .cd-num   { font-size: 1.9rem; }
+  .cd-lbl   { font-size: 0.5rem; letter-spacing: 0.06em; }
+  .countdown-map iframe { height: 150px; }
 }

@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.3.0] - 2026-07-13
+- Countdown live vers l'ETC UTMB 2026 : départ Courmayeur le 25 août à 14h00 (heure locale, UTC+2), compte à rebours jours / heures / minutes / secondes qui tourne en temps réel.
+- Carte du point de départ (OpenStreetMap embarquée, filtre dark mode) avec pin orange pulsant "Courmayeur".
+- Affiché uniquement pour le parcours 0 to 100 ; bascule automatique en état "C'EST PARTI" une fois l'heure de départ passée.
+
 ## [2.2.0] - 2026-06-09
 - Double compteur dodos : "jusqu'à l'ETC 2026" (0to100 uniquement, masqué après la course) + "jusqu'à la CCC/MCC 2027".
 - Label dynamique selon le parcours (CCC ou MCC).

@@ -32,6 +32,15 @@
   const calendarMeta   = document.getElementById("calendar-meta");
   const calendarList   = document.getElementById("calendar-list");
   const celebLayer     = document.getElementById("celebration-layer");
+  const countdownCard  = document.getElementById("countdown-card");
+  const cdDays         = document.getElementById("cd-days");
+  const cdHours        = document.getElementById("cd-hours");
+  const cdMins         = document.getElementById("cd-mins");
+  const cdSecs         = document.getElementById("cd-secs");
+
+  /* ETC UTMB 2026 — départ Courmayeur, 25 août 2026 à 14h00 (CEST, UTC+2) */
+  const ETC_START_ISO = "2026-08-25T14:00:00+02:00";
+  let countdownTimer  = null;
 
   const PROFILE_COOKIE  = "zero_to_100_profile";
   const DONE_KEY_PREFIX = "zero_to_100_days_done";
@@ -269,6 +278,54 @@
     }, 1900);
   }
 
+  /* ── Countdown ETC 2026 ───────────────────────────────────────────────── */
+
+  function pad2(n) {
+    return String(n).padStart(2, "0");
+  }
+
+  function stopCountdown() {
+    if (countdownTimer !== null) {
+      window.clearInterval(countdownTimer);
+      countdownTimer = null;
+    }
+  }
+
+  function startCountdown(profile) {
+    stopCountdown();
+    if (!countdownCard) return;
+
+    const show = profile.track === "0to100";
+    countdownCard.classList.toggle("hidden", !show);
+    if (!show) return;
+
+    const target = new Date(ETC_START_ISO).getTime();
+
+    function tick() {
+      const diff = target - Date.now();
+
+      if (diff <= 0) {
+        countdownCard.classList.add("countdown-card--go");
+        if (cdDays)  cdDays.textContent  = "0";
+        if (cdHours) cdHours.textContent = "00";
+        if (cdMins)  cdMins.textContent  = "00";
+        if (cdSecs)  cdSecs.textContent  = "00";
+        stopCountdown();
+        return;
+      }
+
+      countdownCard.classList.remove("countdown-card--go");
+      const totalSec = Math.floor(diff / 1000);
+      if (cdDays)  cdDays.textContent  = String(Math.floor(totalSec / 86400));
+      if (cdHours) cdHours.textContent = pad2(Math.floor((totalSec % 86400) / 3600));
+      if (cdMins)  cdMins.textContent  = pad2(Math.floor((totalSec % 3600) / 60));
+      if (cdSecs)  cdSecs.textContent  = pad2(totalSec % 60);
+    }
+
+    tick();
+    countdownTimer = window.setInterval(tick, 1000);
+  }
+
   /* ── Render ───────────────────────────────────────────────────────────── */
 
   function renderCalendar(profile) {
@@ -435,6 +492,7 @@
     onboardingCard.classList.add("hidden");
     trackerCard.classList.remove("hidden");
     calendarCard.classList.remove("hidden");
+    startCountdown(profile);
     renderCalendar(profile);
   }
 
@@ -442,6 +500,8 @@
     onboardingCard.classList.remove("hidden");
     trackerCard.classList.add("hidden");
     calendarCard.classList.add("hidden");
+    stopCountdown();
+    if (countdownCard) countdownCard.classList.add("hidden");
   }
 
   /* ── Events ───────────────────────────────────────────────────────────── */

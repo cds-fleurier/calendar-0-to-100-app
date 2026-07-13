@@ -83,6 +83,36 @@
         <button id="reset-profile" type="button" class="btn-ghost">Modifier mon profil</button>
       </section>
 
+      <section id="countdown-card" class="glass-card countdown-card hidden" aria-labelledby="countdown-title">
+        <div class="countdown-head">
+          <span class="countdown-flag" aria-hidden="true">🏔️</span>
+          <div>
+            <h2 id="countdown-title" class="countdown-title">ETC UTMB 2026</h2>
+            <p class="countdown-sub">Départ Courmayeur · 25 août, 14h00</p>
+          </div>
+        </div>
+
+        <div class="countdown-grid" id="countdown-grid" role="timer">
+          <div class="cd-unit"><span class="cd-num" id="cd-days">—</span><span class="cd-lbl">jours</span></div>
+          <div class="cd-unit"><span class="cd-num" id="cd-hours">—</span><span class="cd-lbl">heures</span></div>
+          <div class="cd-unit"><span class="cd-num" id="cd-mins">—</span><span class="cd-lbl">min</span></div>
+          <div class="cd-unit"><span class="cd-num" id="cd-secs">—</span><span class="cd-lbl">sec</span></div>
+        </div>
+        <p class="countdown-go" id="countdown-go">C'EST PARTI 🔥</p>
+
+        <div class="countdown-map">
+          <iframe
+            title="Carte du départ — Courmayeur"
+            src="https://www.openstreetmap.org/export/embed.html?bbox=6.9294%2C45.7746%2C7.0094%2C45.8066&amp;layer=mapnik"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+          ></iframe>
+          <span class="map-pin" aria-hidden="true"></span>
+          <span class="map-place">Courmayeur</span>
+          <a class="countdown-map-link" href="https://www.openstreetmap.org/?mlat=45.7906&amp;mlon=6.9694#map=14/45.7906/6.9694" target="_blank" rel="noopener">Agrandir ↗</a>
+        </div>
+      </section>
+
       <section id="calendar-card" class="glass-card hidden" aria-labelledby="calendar-title">
         <h2 id="calendar-title">Calendrier</h2>
         <p id="calendar-meta" class="calendar-meta-line"></p>
