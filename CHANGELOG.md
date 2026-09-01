@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.6.0] - 2026-09-01
+- Tracés **réels** : la CCC vient du GPX officiel UTMB World Series (108 km, 6200 m D+), avec ses 12 points de contrôle affichés sur la carte (point cliquable → nom + kilomètre).
+- MCC **dérivée** du tronçon final de la CCC (point de contrôle « Martigny » → Chamonix, ~38 km) : le tracé est réel mais la distance reste approximative (affichée avec un « ~ ») tant qu'on n'a pas le GPX MCC.
+- Badge carte : distance et D+ officiels quand ils le sont, simple nom quand le tracé est provisoire.
+- Horaire de départ CCC (vendredi 09h00) confirmé par la métadonnée du GPX 2026.
+- Zoom fractionnaire (`zoomSnap: 0.25`) et marge basse au cadrage : le tracé remplit le cadre sans couper les étiquettes.
+- `scripts/gpx-to-route.py` lit désormais la distance, le D+ et les points de contrôle du GPX, et sait couper un tracé à un point de contrôle (`--from`).
+
 ## [2.5.0] - 2026-09-01
 - Carte du countdown refaite en **Leaflet** (CDN cdnjs, SRI) : la carte redevient interactive (zoom, déplacement) et les marqueurs sont ancrés à leurs vraies coordonnées — c'était le fond du bug du pin décalé au zoom.
 - Tracé complet de la course affiché, avec marqueur de **départ** (orange pulsant) et d'**arrivée** (or), cadrage automatique sur le tracé.

@@ -349,7 +349,8 @@
     raceMap = L.map(mapEl, {
       zoomControl: true,
       scrollWheelZoom: false,   /* la molette scrolle la page, pas la carte */
-      attributionControl: true
+      attributionControl: true,
+      zoomSnap: 0.25            /* zoom fractionnaire : le tracé remplit le cadre */
     });
     L.tileLayer(TILE_URL, { attribution: TILE_ATTRIB, maxZoom: 17 })
       .addTo(raceMap);
@@ -381,6 +382,15 @@
     });
   }
 
+  /* Distance affichée seulement si elle est fiable : officielle (GPX de la course),
+     approximative (tracé dérivé d'un autre GPX), ou tue (tracé provisoire). */
+  function raceBadgeText(route) {
+    if (route.provisional || !route.km) return route.name;
+    if (route.derived) return `${route.name} · ~${route.km} km`;
+    const dplus = route.dplus ? ` · D+ ${route.dplus} m` : "";
+    return `${route.name} · ${route.km} km${dplus}`;
+  }
+
   function drawRoute(route) {
     const map = ensureMap();
     if (!map) return;
@@ -397,6 +407,16 @@
       bounds = line.getBounds();
     }
 
+    /* Ravitos et points de contrôle : petits points cliquables */
+    (route.checkpoints || []).forEach((cp) => {
+      L.circleMarker([cp.lat, cp.lon], {
+        radius: 3.5, color: "#f5c518", weight: 1, opacity: 0.9,
+        fillColor: "#f5c518", fillOpacity: 0.85
+      })
+        .bindTooltip(cp.km ? `${cp.name} · km ${cp.km}` : cp.name, { direction: "top" })
+        .addTo(raceLayer);
+    });
+
     if (route.start) {
       L.marker([route.start.lat, route.start.lon], { icon: pinIcon("start", route.start.name), keyboard: false })
         .addTo(raceLayer);
@@ -407,14 +427,13 @@
     }
 
     if (mapBadge) {
-      /* Distance masquée tant que le tracé est provisoire (elle serait fausse) */
-      const show = !route.provisional && route.km;
-      mapBadge.textContent = show ? `${route.name} · ${route.km} km` : route.name;
+      mapBadge.textContent = raceBadgeText(route);
       mapBadge.classList.remove("hidden");
     }
 
     map.invalidateSize();
-    if (bounds) map.fitBounds(bounds, { padding: [24, 24] });
+    /* Marge basse plus large : les étiquettes pendent sous les marqueurs */
+    if (bounds) map.fitBounds(bounds, { paddingTopLeft: [26, 26], paddingBottomRight: [26, 44] });
     else if (route.start) map.setView([route.start.lat, route.start.lon], 13);
   }
 

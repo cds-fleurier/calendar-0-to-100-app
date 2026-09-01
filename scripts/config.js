@@ -1,10 +1,12 @@
-const APP_VERSION = "2.5.0";
+const APP_VERSION = "2.6.0";
 
 /*
  * raceStart — départ de la course 2027, relatif au lundi de la semaine UTMB choisie.
  * dayOffset : 0 = lundi, 4 = vendredi. `route` pointe vers assets/routes/<route>.json
- * (tracé affiché sur la carte). Horaires provisoires (calés sur les éditions
- * précédentes), à ajuster quand l'organisation publiera le programme 2027.
+ * (tracé affiché sur la carte).
+ * CCC : vendredi 09h00 — confirmé par la métadonnée du GPX officiel 2026
+ * (startdate 2026-08-28T09:00:05+02:00). MCC : lundi 10h00, à confirmer.
+ * À réajuster quand l'organisation publiera le programme 2027.
  */
 const TRACKS = {
   "0to100": {

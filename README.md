@@ -7,9 +7,9 @@ Application web statique (HTML/CSS/JS vanilla), mobile-first, deployee sur GitHu
 - CSS3
 - JavaScript vanilla
 
-## Fonctionnalites V2.5.0
+## Fonctionnalites V2.6.0
 - Countdown live vers la course 2027 du parcours (CCC Courmayeur / MCC Martigny-Combe).
-- Carte Leaflet interactive : trace complet de la course, marqueurs depart et arrivee.
+- Carte Leaflet interactive : trace officiel de la course, marqueurs depart/arrivee et points de controle.
 - Date de depart derivee de la semaine UTMB choisie (`raceStart.dayOffset` dans `scripts/config.js`).
 
 ## Traces de course
@@ -19,7 +19,13 @@ Pour les regenerer depuis un GPX officiel :
     python3 scripts/gpx-to-route.py ccc ~/Downloads/CCC.gpx
     python3 scripts/gpx-to-route.py mcc ~/Downloads/MCC.gpx
 
-Tant qu'un fichier porte `"provisional": true`, la distance n'est pas affichee sur la carte.
+La MCC est actuellement derivee du GPX CCC (elle en emprunte le troncon final) :
+
+    python3 scripts/gpx-to-route.py mcc ~/Downloads/CCC.gpx --from "Martigny" --start "Martigny-Combe"
+
+Les GPX sources ne sont pas versionnes (copyright UTMB World Series) : seuls les traces
+simplifies le sont. Un fichier marque `"derived"` affiche sa distance avec un `~` ;
+un fichier `"provisional": true` n'affiche pas de distance du tout.
 
 ## Fonctionnalites V1.2.0
 - Onboarding premiere visite: prenom + parcours (`0 to 100` ou `0 to 40`) + scenario UTMB.
