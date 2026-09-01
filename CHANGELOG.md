@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.5.0] - 2026-09-01
+- Carte du countdown refaite en **Leaflet** (CDN cdnjs, SRI) : la carte redevient interactive (zoom, déplacement) et les marqueurs sont ancrés à leurs vraies coordonnées — c'était le fond du bug du pin décalé au zoom.
+- Tracé complet de la course affiché, avec marqueur de **départ** (orange pulsant) et d'**arrivée** (or), cadrage automatique sur le tracé.
+- Fond de carte : tuiles OpenStreetMap assombries en CSS (`.leaflet-tile-pane`) — les fonds sombres CARTO / Stadia demandent désormais une clé API.
+- Molette désactivée (elle scrolle la page) ; sur mobile, le déplacement de la carte ne s'active qu'après un tap explicite, pour ne pas piéger le scroll.
+- Tracés dans `assets/routes/{ccc,mcc}.json` + convertisseur `scripts/gpx-to-route.py` pour les régénérer depuis un GPX officiel.
+- ⚠️ Tracés actuellement **provisoires** (points de passage reliés) — la distance est masquée tant qu'ils le sont.
+
 ## [2.4.0] - 2026-09-01
 - Countdown bascule de l'ETC 2026 (couru le 25 août ✅) vers la course 2027 du parcours : CCC pour 0 to 100, MCC pour 0 to 40.
 - Date de départ calculée depuis la semaine UTMB choisie à l'onboarding : MCC = lundi 10h00, CCC = vendredi 09h00 (horaires provisoires, à confirmer avec le programme officiel 2027).

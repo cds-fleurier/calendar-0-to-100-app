@@ -1,7 +1,7 @@
 (function runApp() {
   const safeAppVersion = typeof APP_VERSION === "string" ? APP_VERSION : "1.0.0";
-  const FALLBACK_CCC = { dayOffset: 4, time: "09:00", utcOffset: "+02:00", place: "Courmayeur",      lat: 45.7906, lon: 6.9694 };
-  const FALLBACK_MCC = { dayOffset: 0, time: "10:00", utcOffset: "+02:00", place: "Martigny-Combe", lat: 46.0673, lon: 7.0370 };
+  const FALLBACK_CCC = { dayOffset: 4, time: "09:00", utcOffset: "+02:00", place: "Courmayeur",     route: "ccc" };
+  const FALLBACK_MCC = { dayOffset: 0, time: "10:00", utcOffset: "+02:00", place: "Martigny-Combe", route: "mcc" };
   const safeTracks = typeof TRACKS === "object" && TRACKS ? TRACKS : {
     "0to100": { label: "0 to 100", race: "CCC", startDate: "2026-03-02", raceStart: FALLBACK_CCC },
     "0to40":  { label: "0 to 40",  race: "MCC", startDate: "2026-04-06", raceStart: FALLBACK_MCC }
@@ -37,14 +37,22 @@
   const cdSecs         = document.getElementById("cd-secs");
   const countdownTitle = document.getElementById("countdown-title");
   const countdownSub   = document.getElementById("countdown-sub");
-  const mapFrame       = document.getElementById("countdown-map-frame");
-  const mapPlace       = document.getElementById("map-place");
-  const mapLink        = document.getElementById("countdown-map-link");
+  const mapEl          = document.getElementById("race-map");
+  const mapBadge       = document.getElementById("map-badge");
+  const mapHint        = document.getElementById("map-hint");
+  const mapFallback    = document.getElementById("map-fallback");
 
-  /* Demi-fenêtre de la bbox OSM embarquée (zoom ~14) */
-  const MAP_LAT_SPAN = 0.016;
-  const MAP_LON_SPAN = 0.040;
+  /* Tuiles OSM standard, assombries en CSS (.leaflet-tile-pane) : pas de clé API,
+     contrairement aux fonds sombres CARTO / Stadia. */
+  const TILE_URL    = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+  const TILE_ATTRIB =
+    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+
   let countdownTimer = null;
+  let raceMap        = null;   /* instance Leaflet, créée une seule fois */
+  let raceLayer      = null;   /* tracé + marqueurs de la course courante */
+  let raceMapSlug    = null;   /* course actuellement dessinée */
+  const routeCache   = {};
 
   const PROFILE_COOKIE  = "zero_to_100_profile";
   const DONE_KEY_PREFIX = "zero_to_100_days_done";
@@ -301,9 +309,8 @@
 
     return {
       race:  track.race,
+      route: rs.route,
       place: rs.place,
-      lat:   rs.lat,
-      lon:   rs.lon,
       date:  day,
       time:  rs.time,
       ts:    new Date(`${toDayKey(day)}T${rs.time}:00${rs.utcOffset}`).getTime()
@@ -319,25 +326,113 @@
       countdownSub.textContent =
         `Départ ${info.place} · ${when}, ${info.time.replace(":", "h")}`;
     }
+  }
 
-    if (mapPlace) mapPlace.textContent = info.place;
+  /* ── Carte du tracé (Leaflet) ─────────────────────────────────────────── */
 
-    if (mapFrame) {
-      const bbox = [
-        (info.lon - MAP_LON_SPAN).toFixed(4),
-        (info.lat - MAP_LAT_SPAN).toFixed(4),
-        (info.lon + MAP_LON_SPAN).toFixed(4),
-        (info.lat + MAP_LAT_SPAN).toFixed(4)
-      ].map(encodeURIComponent).join("%2C");
-      const src = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik`;
-      if (mapFrame.getAttribute("src") !== src) mapFrame.setAttribute("src", src);
-      mapFrame.setAttribute("title", `Carte du départ — ${info.place}`);
+  /* Leaflet est chargé en `defer` : il n'est pas encore là quand app.js s'exécute */
+  function whenLeafletReady(cb) {
+    if (typeof L !== "undefined") { cb(); return; }
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", function retry() {
+        if (typeof L !== "undefined") cb();
+        else if (mapFallback) mapFallback.classList.remove("hidden");
+      }, { once: true });
+      return;
+    }
+    if (mapFallback) mapFallback.classList.remove("hidden");
+  }
+
+  function ensureMap() {
+    if (raceMap || !mapEl) return raceMap;
+
+    raceMap = L.map(mapEl, {
+      zoomControl: true,
+      scrollWheelZoom: false,   /* la molette scrolle la page, pas la carte */
+      attributionControl: true
+    });
+    L.tileLayer(TILE_URL, { attribution: TILE_ATTRIB, maxZoom: 17 })
+      .addTo(raceMap);
+
+    /* Sur mobile, un doigt sur la carte doit d'abord scroller la page :
+       le drag ne s'active qu'après un tap explicite. */
+    if (L.Browser.mobile) {
+      raceMap.dragging.disable();
+      raceMap.touchZoom.disable();
+      if (mapHint) {
+        mapHint.classList.remove("hidden");
+        mapHint.addEventListener("click", () => {
+          raceMap.dragging.enable();
+          raceMap.touchZoom.enable();
+          mapHint.classList.add("hidden");
+        });
+      }
     }
 
-    if (mapLink) {
-      mapLink.href =
-        `https://www.openstreetmap.org/?mlat=${info.lat}&mlon=${info.lon}#map=14/${info.lat}/${info.lon}`;
+    return raceMap;
+  }
+
+  function pinIcon(kind, label) {
+    return L.divIcon({
+      className: "",
+      html: `<span class="race-pin race-pin--${kind}"><b class="race-pin__label">${label}</b></span>`,
+      iconSize: [14, 14],
+      iconAnchor: [7, 7]
+    });
+  }
+
+  function drawRoute(route) {
+    const map = ensureMap();
+    if (!map) return;
+
+    if (raceLayer) { map.removeLayer(raceLayer); raceLayer = null; }
+    raceLayer = L.layerGroup().addTo(map);
+
+    const pts = route.points || [];
+    let bounds = null;
+
+    if (pts.length > 1) {
+      L.polyline(pts, { color: "#ff6b00", weight: 9, opacity: 0.16, lineJoin: "round" }).addTo(raceLayer);
+      const line = L.polyline(pts, { color: "#ff6b00", weight: 3, opacity: 0.95, lineJoin: "round" }).addTo(raceLayer);
+      bounds = line.getBounds();
     }
+
+    if (route.start) {
+      L.marker([route.start.lat, route.start.lon], { icon: pinIcon("start", route.start.name), keyboard: false })
+        .addTo(raceLayer);
+    }
+    if (route.finish) {
+      L.marker([route.finish.lat, route.finish.lon], { icon: pinIcon("finish", route.finish.name), keyboard: false })
+        .addTo(raceLayer);
+    }
+
+    if (mapBadge) {
+      /* Distance masquée tant que le tracé est provisoire (elle serait fausse) */
+      const show = !route.provisional && route.km;
+      mapBadge.textContent = show ? `${route.name} · ${route.km} km` : route.name;
+      mapBadge.classList.remove("hidden");
+    }
+
+    map.invalidateSize();
+    if (bounds) map.fitBounds(bounds, { padding: [24, 24] });
+    else if (route.start) map.setView([route.start.lat, route.start.lon], 13);
+  }
+
+  function showRaceMap(slug) {
+    if (!mapEl || !slug) return;
+    if (raceMapSlug === slug && raceMap) { raceMap.invalidateSize(); return; }
+
+    const render = (route) => {
+      raceMapSlug = slug;
+      whenLeafletReady(() => drawRoute(route));
+    };
+
+    if (routeCache[slug]) { render(routeCache[slug]); return; }
+
+    fetch(`assets/routes/${slug}.json`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(r.status))))
+      .then((route) => { routeCache[slug] = route; render(route); })
+      .catch(() => { if (mapFallback) mapFallback.classList.remove("hidden"); });
   }
 
   function stopCountdown() {
@@ -359,6 +454,7 @@
 
     countdownCard.classList.remove("hidden");
     renderCountdownHead(info);
+    showRaceMap(info.route);
 
     function tick() {
       const diff = info.ts - Date.now();

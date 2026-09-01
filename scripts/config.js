@@ -1,8 +1,9 @@
-const APP_VERSION = "2.4.0";
+const APP_VERSION = "2.5.0";
 
 /*
  * raceStart — départ de la course 2027, relatif au lundi de la semaine UTMB choisie.
- * dayOffset : 0 = lundi, 4 = vendredi. Horaires provisoires (calés sur les éditions
+ * dayOffset : 0 = lundi, 4 = vendredi. `route` pointe vers assets/routes/<route>.json
+ * (tracé affiché sur la carte). Horaires provisoires (calés sur les éditions
  * précédentes), à ajuster quand l'organisation publiera le programme 2027.
  */
 const TRACKS = {
@@ -15,8 +16,7 @@ const TRACKS = {
       time: "09:00",
       utcOffset: "+02:00",
       place: "Courmayeur",
-      lat: 45.7906,
-      lon: 6.9694
+      route: "ccc"
     }
   },
   "0to40": {
@@ -28,8 +28,7 @@ const TRACKS = {
       time: "10:00",
       utcOffset: "+02:00",
       place: "Martigny-Combe",
-      lat: 46.0673,
-      lon: 7.0370
+      route: "mcc"
     }
   }
 };

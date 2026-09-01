@@ -7,10 +7,19 @@ Application web statique (HTML/CSS/JS vanilla), mobile-first, deployee sur GitHu
 - CSS3
 - JavaScript vanilla
 
-## Fonctionnalites V2.4.0
-- Countdown live vers la course 2027 du parcours (CCC Courmayeur / MCC Martigny-Combe), avec carte OSM du depart.
+## Fonctionnalites V2.5.0
+- Countdown live vers la course 2027 du parcours (CCC Courmayeur / MCC Martigny-Combe).
+- Carte Leaflet interactive : trace complet de la course, marqueurs depart et arrivee.
 - Date de depart derivee de la semaine UTMB choisie (`raceStart.dayOffset` dans `scripts/config.js`).
-- La carte est volontairement non interactive : le pin est un overlay centre, le zoom le desynchroniserait.
+
+## Traces de course
+Les traces vivent dans `assets/routes/<slug>.json` et sont referencees par `raceStart.route`.
+Pour les regenerer depuis un GPX officiel :
+
+    python3 scripts/gpx-to-route.py ccc ~/Downloads/CCC.gpx
+    python3 scripts/gpx-to-route.py mcc ~/Downloads/MCC.gpx
+
+Tant qu'un fichier porte `"provisional": true`, la distance n'est pas affichee sur la carte.
 
 ## Fonctionnalites V1.2.0
 - Onboarding premiere visite: prenom + parcours (`0 to 100` ou `0 to 40`) + scenario UTMB.
