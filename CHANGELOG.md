@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.4.0] - 2026-09-01
+- Countdown bascule de l'ETC 2026 (couru le 25 août ✅) vers la course 2027 du parcours : CCC pour 0 to 100, MCC pour 0 to 40.
+- Date de départ calculée depuis la semaine UTMB choisie à l'onboarding : MCC = lundi 10h00, CCC = vendredi 09h00 (horaires provisoires, à confirmer avec le programme officiel 2027).
+- Carte du départ dynamique : Courmayeur (CCC) / Martigny-Combe (MCC), titre et lien "Agrandir" suivent le parcours.
+- Fix carte : l'iframe OSM n'est plus interactive (`pointer-events: none`) — le pin overlay est centré, un zoom/pan le désynchronisait du lieu réel. L'exploration passe par le lien "Agrandir".
+- Compteur "dodos" recalé sur le jour de course au lieu de la fin de la semaine UTMB (plus de contradiction avec le countdown).
+- Suppression du bloc stat "dodos jusqu'à l'ETC 2026", devenu mort après la course.
+
 ## [2.3.0] - 2026-07-13
 - Countdown live vers l'ETC UTMB 2026 : départ Courmayeur le 25 août à 14h00 (heure locale, UTC+2), compte à rebours jours / heures / minutes / secondes qui tourne en temps réel.
 - Carte du point de départ (OpenStreetMap embarquée, filtre dark mode) avec pin orange pulsant "Courmayeur".

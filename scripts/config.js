@@ -1,15 +1,36 @@
-const APP_VERSION = "2.3.0";
+const APP_VERSION = "2.4.0";
 
+/*
+ * raceStart — départ de la course 2027, relatif au lundi de la semaine UTMB choisie.
+ * dayOffset : 0 = lundi, 4 = vendredi. Horaires provisoires (calés sur les éditions
+ * précédentes), à ajuster quand l'organisation publiera le programme 2027.
+ */
 const TRACKS = {
   "0to100": {
     label: "0 to 100",
     race: "CCC",
-    startDate: "2026-03-02"
+    startDate: "2026-03-02",
+    raceStart: {
+      dayOffset: 4,
+      time: "09:00",
+      utcOffset: "+02:00",
+      place: "Courmayeur",
+      lat: 45.7906,
+      lon: 6.9694
+    }
   },
   "0to40": {
     label: "0 to 40",
     race: "MCC",
-    startDate: "2026-04-01"
+    startDate: "2026-04-01",
+    raceStart: {
+      dayOffset: 0,
+      time: "10:00",
+      utcOffset: "+02:00",
+      place: "Martigny-Combe",
+      lat: 46.0673,
+      lon: 7.0370
+    }
   }
 };
 
@@ -47,10 +68,12 @@ const EVENTS = [
 const UTMB_SCENARIOS = {
   week1: {
     label: "23 août 2027 au 29 août 2027",
+    weekStart: "2027-08-23",
     targetDate: "2027-08-29"
   },
   week2: {
     label: "30 août 2027 au 5 sept. 2027",
+    weekStart: "2027-08-30",
     targetDate: "2027-09-05"
   }
 };

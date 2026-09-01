@@ -1,12 +1,14 @@
 (function runApp() {
   const safeAppVersion = typeof APP_VERSION === "string" ? APP_VERSION : "1.0.0";
+  const FALLBACK_CCC = { dayOffset: 4, time: "09:00", utcOffset: "+02:00", place: "Courmayeur",      lat: 45.7906, lon: 6.9694 };
+  const FALLBACK_MCC = { dayOffset: 0, time: "10:00", utcOffset: "+02:00", place: "Martigny-Combe", lat: 46.0673, lon: 7.0370 };
   const safeTracks = typeof TRACKS === "object" && TRACKS ? TRACKS : {
-    "0to100": { label: "0 to 100", race: "CCC", startDate: "2026-03-02" },
-    "0to40":  { label: "0 to 40",  race: "MCC", startDate: "2026-04-06" }
+    "0to100": { label: "0 to 100", race: "CCC", startDate: "2026-03-02", raceStart: FALLBACK_CCC },
+    "0to40":  { label: "0 to 40",  race: "MCC", startDate: "2026-04-06", raceStart: FALLBACK_MCC }
   };
   const safeUtmbScenarios = typeof UTMB_SCENARIOS === "object" && UTMB_SCENARIOS ? UTMB_SCENARIOS : {
-    week1: { label: "23 août 2027 au 29 août 2027",       targetDate: "2027-08-29" },
-    week2: { label: "30 août 2027 au 5 septembre 2027",   targetDate: "2027-09-05" }
+    week1: { label: "23 août 2027 au 29 août 2027",     weekStart: "2027-08-23", targetDate: "2027-08-29" },
+    week2: { label: "30 août 2027 au 5 septembre 2027", weekStart: "2027-08-30", targetDate: "2027-09-05" }
   };
 
   const RING_CIRC     = 326.73; /* 2π × 52 */
@@ -22,10 +24,6 @@
   const projectLine    = document.getElementById("project-line");
   const dodosValue     = document.getElementById("dodos-value");
   const dodosRaceLbl   = document.getElementById("dodos-race-lbl");
-  const dodosEtcBlock  = document.getElementById("dodos-etc-block");
-  const dodosEtcDiv    = document.getElementById("dodos-etc-divider");
-  const dodosEtcValue  = document.getElementById("dodos-etc-value");
-  const statsAside     = document.getElementById("stats-aside");
   const streakValue    = document.getElementById("streak-value");
   const progressRing   = document.getElementById("progress-ring");
   const progressPctEl  = document.getElementById("progress-pct");
@@ -37,10 +35,16 @@
   const cdHours        = document.getElementById("cd-hours");
   const cdMins         = document.getElementById("cd-mins");
   const cdSecs         = document.getElementById("cd-secs");
+  const countdownTitle = document.getElementById("countdown-title");
+  const countdownSub   = document.getElementById("countdown-sub");
+  const mapFrame       = document.getElementById("countdown-map-frame");
+  const mapPlace       = document.getElementById("map-place");
+  const mapLink        = document.getElementById("countdown-map-link");
 
-  /* ETC UTMB 2026 — départ Courmayeur, 25 août 2026 à 14h00 (CEST, UTC+2) */
-  const ETC_START_ISO = "2026-08-25T14:00:00+02:00";
-  let countdownTimer  = null;
+  /* Demi-fenêtre de la bbox OSM embarquée (zoom ~14) */
+  const MAP_LAT_SPAN = 0.016;
+  const MAP_LON_SPAN = 0.040;
+  let countdownTimer = null;
 
   const PROFILE_COOKIE  = "zero_to_100_profile";
   const DONE_KEY_PREFIX = "zero_to_100_days_done";
@@ -278,10 +282,62 @@
     }, 1900);
   }
 
-  /* ── Countdown ETC 2026 ───────────────────────────────────────────────── */
+  /* ── Countdown course 2027 ────────────────────────────────────────────── */
 
   function pad2(n) {
     return String(n).padStart(2, "0");
+  }
+
+  /* Date/heure de départ = lundi de la semaine UTMB + dayOffset, à l'heure locale course */
+  function raceStartInfo(profile) {
+    const track    = safeTracks[profile.track];
+    const scenario = safeUtmbScenarios[profile.utmbScenario];
+    if (!track || !scenario || !track.raceStart) return null;
+
+    const rs      = track.raceStart;
+    const weekRef = scenario.weekStart || scenario.targetDate;
+    const day     = parseDate(weekRef);
+    day.setDate(day.getDate() + (rs.dayOffset || 0));
+
+    return {
+      race:  track.race,
+      place: rs.place,
+      lat:   rs.lat,
+      lon:   rs.lon,
+      date:  day,
+      time:  rs.time,
+      ts:    new Date(`${toDayKey(day)}T${rs.time}:00${rs.utcOffset}`).getTime()
+    };
+  }
+
+  function renderCountdownHead(info) {
+    if (countdownTitle) countdownTitle.textContent = `${info.race} UTMB 2027`;
+    if (countdownSub) {
+      const when = new Intl.DateTimeFormat("fr-FR", {
+        weekday: "long", day: "numeric", month: "long"
+      }).format(info.date);
+      countdownSub.textContent =
+        `Départ ${info.place} · ${when}, ${info.time.replace(":", "h")}`;
+    }
+
+    if (mapPlace) mapPlace.textContent = info.place;
+
+    if (mapFrame) {
+      const bbox = [
+        (info.lon - MAP_LON_SPAN).toFixed(4),
+        (info.lat - MAP_LAT_SPAN).toFixed(4),
+        (info.lon + MAP_LON_SPAN).toFixed(4),
+        (info.lat + MAP_LAT_SPAN).toFixed(4)
+      ].map(encodeURIComponent).join("%2C");
+      const src = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik`;
+      if (mapFrame.getAttribute("src") !== src) mapFrame.setAttribute("src", src);
+      mapFrame.setAttribute("title", `Carte du départ — ${info.place}`);
+    }
+
+    if (mapLink) {
+      mapLink.href =
+        `https://www.openstreetmap.org/?mlat=${info.lat}&mlon=${info.lon}#map=14/${info.lat}/${info.lon}`;
+    }
   }
 
   function stopCountdown() {
@@ -295,14 +351,17 @@
     stopCountdown();
     if (!countdownCard) return;
 
-    const show = profile.track === "0to100";
-    countdownCard.classList.toggle("hidden", !show);
-    if (!show) return;
+    const info = raceStartInfo(profile);
+    if (!info || Number.isNaN(info.ts)) {
+      countdownCard.classList.add("hidden");
+      return;
+    }
 
-    const target = new Date(ETC_START_ISO).getTime();
+    countdownCard.classList.remove("hidden");
+    renderCountdownHead(info);
 
     function tick() {
-      const diff = target - Date.now();
+      const diff = info.ts - Date.now();
 
       if (diff <= 0) {
         countdownCard.classList.add("countdown-card--go");
@@ -337,7 +396,9 @@
     const todayKey = toDayKey(now);
 
     const doneDays   = getDoneDays(profile);
-    const dodosLeft  = Math.max(0, daysDiff(now, end));
+    /* Dodos = jusqu'au jour de course, pas jusqu'à la fin de la semaine UTMB */
+    const raceInfo   = raceStartInfo(profile);
+    const dodosLeft  = Math.max(0, daysDiff(now, raceInfo ? raceInfo.date : end));
     const totalDays  = Math.max(0, daysDiff(start, end) + 1);
     const streak     = calculateStreak(profile, start, doneDays);
 
@@ -348,15 +409,6 @@
       cc.setDate(cc.getDate() + 1);
     }
     const pct = totalDays > 0 ? Math.round((doneCount / totalDays) * 100) : 0;
-
-    /* ETC 2026 countdown (0to100 only, until the day of the race) */
-    const etcDate  = parseDate("2026-08-25");
-    const showEtc  = profile.track === "0to100" && daysDiff(now, etcDate) > 0;
-    const dodosEtc = showEtc ? daysDiff(now, etcDate) : 0;
-    if (statsAside)    statsAside.classList.toggle("stats-aside--has-etc", showEtc);
-    if (dodosEtcBlock) dodosEtcBlock.classList.toggle("hidden", !showEtc);
-    if (dodosEtcDiv)   dodosEtcDiv.classList.toggle("hidden", !showEtc);
-    if (dodosEtcValue && showEtc) dodosEtcValue.textContent = String(dodosEtc);
 
     /* Stats */
     if (dodosValue)    dodosValue.textContent  = String(dodosLeft);

@@ -7,6 +7,11 @@ Application web statique (HTML/CSS/JS vanilla), mobile-first, deployee sur GitHu
 - CSS3
 - JavaScript vanilla
 
+## Fonctionnalites V2.4.0
+- Countdown live vers la course 2027 du parcours (CCC Courmayeur / MCC Martigny-Combe), avec carte OSM du depart.
+- Date de depart derivee de la semaine UTMB choisie (`raceStart.dayOffset` dans `scripts/config.js`).
+- La carte est volontairement non interactive : le pin est un overlay centre, le zoom le desynchroniserait.
+
 ## Fonctionnalites V1.2.0
 - Onboarding premiere visite: prenom + parcours (`0 to 100` ou `0 to 40`) + scenario UTMB.
 - Stockage local du profil via cookie.

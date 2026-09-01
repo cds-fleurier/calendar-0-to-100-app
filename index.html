@@ -60,11 +60,6 @@
             </div>
           </div>
           <div class="stats-aside" id="stats-aside">
-            <div class="stat-block hidden" id="dodos-etc-block">
-              <span class="stat-val" id="dodos-etc-value">—</span>
-              <span class="stat-lbl">dodos jusqu'à l'ETC 2026</span>
-            </div>
-            <div class="stat-divider hidden" id="dodos-etc-divider"></div>
             <div class="stat-block">
               <span class="stat-val" id="dodos-value">—</span>
               <span class="stat-lbl" id="dodos-race-lbl">dodos restants</span>
@@ -87,8 +82,8 @@
         <div class="countdown-head">
           <span class="countdown-flag" aria-hidden="true">🏔️</span>
           <div>
-            <h2 id="countdown-title" class="countdown-title">ETC UTMB 2026</h2>
-            <p class="countdown-sub">Départ Courmayeur · 25 août, 14h00</p>
+            <h2 id="countdown-title" class="countdown-title">UTMB 2027</h2>
+            <p class="countdown-sub" id="countdown-sub">—</p>
           </div>
         </div>
 
@@ -102,14 +97,17 @@
 
         <div class="countdown-map">
           <iframe
-            title="Carte du départ — Courmayeur"
-            src="https://www.openstreetmap.org/export/embed.html?bbox=6.9294%2C45.7746%2C7.0094%2C45.8066&amp;layer=mapnik"
+            id="countdown-map-frame"
+            title="Carte du départ"
+            src="about:blank"
             loading="lazy"
+            scrolling="no"
+            tabindex="-1"
             referrerpolicy="no-referrer-when-downgrade"
           ></iframe>
           <span class="map-pin" aria-hidden="true"></span>
-          <span class="map-place">Courmayeur</span>
-          <a class="countdown-map-link" href="https://www.openstreetmap.org/?mlat=45.7906&amp;mlon=6.9694#map=14/45.7906/6.9694" target="_blank" rel="noopener">Agrandir ↗</a>
+          <span class="map-place" id="map-place">—</span>
+          <a class="countdown-map-link" id="countdown-map-link" href="https://www.openstreetmap.org/" target="_blank" rel="noopener">Agrandir ↗</a>
         </div>
       </section>
 

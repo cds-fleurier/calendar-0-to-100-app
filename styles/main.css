@@ -285,10 +285,6 @@ select:focus {
   color: var(--text-muted);
 }
 
-/* Compact stats-aside when ETC block is shown (3 blocks) */
-.stats-aside--has-etc .stat-block { padding: 7px 0; }
-.stats-aside--has-etc .stat-val   { font-size: 2.1rem; }
-
 /* Profile meta */
 .profile-meta {
   margin-bottom: 14px;
@@ -300,7 +296,7 @@ select:focus {
   line-height: 1.6;
 }
 
-/* ─── Countdown ETC 2026 ─────────────────────────────────────────────────── */
+/* ─── Countdown course 2027 ─────────────────────────────────────────────────── */
 .countdown-card {
   position: relative;
   overflow: hidden;
@@ -412,6 +408,9 @@ select:focus {
   height: 180px;
   border: 0;
   filter: invert(0.92) hue-rotate(180deg) brightness(0.95) contrast(0.9) saturate(0.8);
+  /* Carte figée : le pin est un overlay centré, un zoom/pan dans l'iframe le
+     désynchroniserait du lieu réel. Exploration → lien "Agrandir". */
+  pointer-events: none;
 }
 
 .map-pin {
@@ -821,7 +820,6 @@ select:focus {
 
   .ring-pct   { font-size: 1.6rem; }
   .stat-val   { font-size: 2.1rem; }
-  .stats-aside--has-etc .stat-val { font-size: 1.8rem; }
 
   .day-cell   { min-height: 48px; padding: 5px 4px; }
   .day-number { font-size: 0.92rem; }
