@@ -150,11 +150,15 @@ def main():
         "start":  {"name": start_name,  "lat": pts[0][0],  "lon": pts[0][1]},
         "finish": {"name": finish_name, "lat": pts[-1][0], "lon": pts[-1][1]},
         "points": pts,
-        # Points de contrôle hors départ/arrivée (déjà matérialisés par les gros marqueurs)
+        # Points de contrôle hors départ/arrivée (déjà matérialisés par les gros
+        # marqueurs) — filtrés sur la position, le nom pouvant différer d'un
+        # fichier à l'autre ("Martigny Combe" vs "Martigny-Combe")
         "checkpoints": [
             {"name": c["name"], "lat": c["lat"], "lon": c["lon"],
              "km": round(((c["meters"] or 0) - offset_m) / 1000.0, 1)}
-            for c in checkpoints if c["name"] not in (start_name, finish_name)
+            for c in checkpoints
+            if min(haversine_km((c["lat"], c["lon"]), (pts[0][0], pts[0][1])),
+                   haversine_km((c["lat"], c["lon"]), (pts[-1][0], pts[-1][1]))) > 0.3
         ],
     }
     if derived:

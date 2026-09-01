@@ -7,7 +7,7 @@ Application web statique (HTML/CSS/JS vanilla), mobile-first, deployee sur GitHu
 - CSS3
 - JavaScript vanilla
 
-## Fonctionnalites V2.6.0
+## Fonctionnalites V2.6.1
 - Countdown live vers la course 2027 du parcours (CCC Courmayeur / MCC Martigny-Combe).
 - Carte Leaflet interactive : trace officiel de la course, marqueurs depart/arrivee et points de controle.
 - Date de depart derivee de la semaine UTMB choisie (`raceStart.dayOffset` dans `scripts/config.js`).
@@ -19,7 +19,8 @@ Pour les regenerer depuis un GPX officiel :
     python3 scripts/gpx-to-route.py ccc ~/Downloads/CCC.gpx
     python3 scripts/gpx-to-route.py mcc ~/Downloads/MCC.gpx
 
-La MCC est actuellement derivee du GPX CCC (elle en emprunte le troncon final) :
+A defaut de GPX dedie, un trace peut etre derive d'un autre (la MCC emprunte le
+troncon final de la CCC) :
 
     python3 scripts/gpx-to-route.py mcc ~/Downloads/CCC.gpx --from "Martigny" --start "Martigny-Combe"
 

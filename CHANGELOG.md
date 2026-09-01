@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.6.1] - 2026-09-01
+- MCC : tracé officiel depuis son propre GPX UTMB (40 km, 2300 m D+, points de contrôle Col de la Forclaz / Col de Balme / Argentière). Plus de tracé dérivé ni de distance approximative — les deux parcours sont désormais exacts.
+- Horaire de départ MCC (lundi 10h00) confirmé par la métadonnée du GPX 2026 (`startdate 2026-08-24T10:00:03+02:00`).
+- Convertisseur : les points de contrôle confondus avec le départ ou l'arrivée sont filtrés sur leur position et non sur leur nom (le GPX écrit « Martigny Combe », l'app « Martigny-Combe »).
+
 ## [2.6.0] - 2026-09-01
 - Tracés **réels** : la CCC vient du GPX officiel UTMB World Series (108 km, 6200 m D+), avec ses 12 points de contrôle affichés sur la carte (point cliquable → nom + kilomètre).
 - MCC **dérivée** du tronçon final de la CCC (point de contrôle « Martigny » → Chamonix, ~38 km) : le tracé est réel mais la distance reste approximative (affichée avec un « ~ ») tant qu'on n'a pas le GPX MCC.
