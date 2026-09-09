@@ -1,1 +1,4 @@
+# GPX officiels UTMB — non versionnes (copyright UTMB World Series),
+# conserves ici pour pouvoir regenerer assets/routes/ sans re-telecharger.
+.gpx-sources/
 .DS_Store
