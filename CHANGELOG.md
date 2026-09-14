@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.8.1] - 2026-09-14
+- Lieux des WE Choc : #2 Besançon, #3 Bellevaux (Haute-Savoie).
+
 ## [2.8.0] - 2026-09-14
 - Case **« Validée par le staff »** dans le dialog de course : non cochée, la course est une piste (« ⏳ En attente de validation », nom en italique, liseré pointillé dans la liste et sur le calendrier) ; cochée, elle est définitive (« ✓ Validée par le staff » en vert). Champ `validated` dans le `localStorage`, absent = non validée.
 

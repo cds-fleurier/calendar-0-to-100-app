@@ -1,4 +1,4 @@
-const APP_VERSION = "2.8.0";
+const APP_VERSION = "2.8.1";
 
 /*
  * raceStart — départ de la course 2027, relatif au lundi de la semaine UTMB choisie.
@@ -59,6 +59,7 @@ const EVENTS = [
     label: "WE Choc #2",
     start: "2026-10-24",
     end:   "2026-10-25",
+    place: "Besançon",
     tracks: ["0to100", "0to40"],
     type: "choc"
   },
@@ -66,6 +67,7 @@ const EVENTS = [
     label: "WE Choc #3",
     start: "2027-05-15",
     end:   "2027-05-17",
+    place: "Bellevaux (Haute-Savoie)",
     tracks: ["0to100", "0to40"],
     type: "choc"
   },
