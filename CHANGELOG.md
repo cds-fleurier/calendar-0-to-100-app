@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.7.1] - 2026-09-14
+- Distances des courses de préparation propres au parcours **0 to 40** : C1 10–15 km · C2 10–15 km · C3 ≤ 20 km · C4 20–25 km (mêmes week-ends que le 0 to 100). Les fenêtres de dates sont factorisées dans `RACE_WINDOWS`.
+
 ## [2.7.0] - 2026-09-14
 - Nouvelle carte **Étapes** entre le tracker et le countdown de la course : countdown live (jours / heures / min / sec) sur l'étape la plus proche, puis liste chronologique de toutes les étapes — WE Choc, courses de préparation, course finale — avec J-n, étapes passées barrées, étape en cours en « C'EST MAINTENANT ».
 - **Courses de préparation personnelles** : 4 emplacements (`RACE_SLOTS` dans `scripts/config.js`), chacun avec ses week-ends autorisés et sa fourchette de distance fixés par le staff. Le participant ajoute, modifie ou supprime sa course (nom, date, distance, lieu) via un `<dialog>` ; une saisie hors contrainte est signalée en orange, jamais bloquée (c'est le staff qui valide).

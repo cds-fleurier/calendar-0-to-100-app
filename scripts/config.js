@@ -1,4 +1,4 @@
-const APP_VERSION = "2.7.0";
+const APP_VERSION = "2.7.1";
 
 /*
  * raceStart — départ de la course 2027, relatif au lundi de la semaine UTMB choisie.
@@ -89,34 +89,29 @@ const EVENTS = [
  *   minKm / maxKm : distance attendue (l'un ou l'autre peut être null)
  *   note    : précision libre, facultative
  * Une saisie hors contrainte est signalée, pas bloquée (c'est le staff qui tranche).
- * Contraintes communiquées par le staff le 14/09/2026, identiques pour les deux parcours.
+ * Contraintes communiquées par le staff le 14/09/2026 : mêmes week-ends pour les
+ * deux parcours, distances propres à chacun.
  */
-const RACE_SLOT_RULES = [
-  {
-    id: "race1", label: "Course 1",
-    windows: [{ from: "2026-12-19", to: "2026-12-20" }, { from: "2026-12-26", to: "2026-12-27" }],
-    minKm: 10, maxKm: 15
-  },
-  {
-    id: "race2", label: "Course 2",
-    windows: [{ from: "2027-03-20", to: "2027-03-21" }, { from: "2027-03-27", to: "2027-03-28" }],
-    minKm: 20, maxKm: 30
-  },
-  {
-    id: "race3", label: "Course 3",
-    windows: [{ from: "2027-05-29", to: "2027-05-30" }, { from: "2027-06-05", to: "2027-06-06" }],
-    minKm: null, maxKm: 40
-  },
-  {
-    id: "race4", label: "Course 4",
-    windows: [{ from: "2027-07-03", to: "2027-07-04" }],
-    minKm: 40, maxKm: 50
-  }
-];
+const RACE_WINDOWS = {
+  race1: [{ from: "2026-12-19", to: "2026-12-20" }, { from: "2026-12-26", to: "2026-12-27" }],
+  race2: [{ from: "2027-03-20", to: "2027-03-21" }, { from: "2027-03-27", to: "2027-03-28" }],
+  race3: [{ from: "2027-05-29", to: "2027-05-30" }, { from: "2027-06-05", to: "2027-06-06" }],
+  race4: [{ from: "2027-07-03", to: "2027-07-04" }]
+};
 
 const RACE_SLOTS = {
-  "0to100": RACE_SLOT_RULES,
-  "0to40":  RACE_SLOT_RULES
+  "0to100": [
+    { id: "race1", label: "Course 1", windows: RACE_WINDOWS.race1, minKm: 10,   maxKm: 15 },
+    { id: "race2", label: "Course 2", windows: RACE_WINDOWS.race2, minKm: 20,   maxKm: 30 },
+    { id: "race3", label: "Course 3", windows: RACE_WINDOWS.race3, minKm: null, maxKm: 40 },
+    { id: "race4", label: "Course 4", windows: RACE_WINDOWS.race4, minKm: 40,   maxKm: 50 }
+  ],
+  "0to40": [
+    { id: "race1", label: "Course 1", windows: RACE_WINDOWS.race1, minKm: 10,   maxKm: 15 },
+    { id: "race2", label: "Course 2", windows: RACE_WINDOWS.race2, minKm: 10,   maxKm: 15 },
+    { id: "race3", label: "Course 3", windows: RACE_WINDOWS.race3, minKm: null, maxKm: 20 },
+    { id: "race4", label: "Course 4", windows: RACE_WINDOWS.race4, minKm: 20,   maxKm: 25 }
+  ]
 };
 
 const UTMB_SCENARIOS = {
