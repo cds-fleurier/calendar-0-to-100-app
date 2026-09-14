@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.7.0] - 2026-09-14
+- Nouvelle carte **Étapes** entre le tracker et le countdown de la course : countdown live (jours / heures / min / sec) sur l'étape la plus proche, puis liste chronologique de toutes les étapes — WE Choc, courses de préparation, course finale — avec J-n, étapes passées barrées, étape en cours en « C'EST MAINTENANT ».
+- **Courses de préparation personnelles** : 4 emplacements (`RACE_SLOTS` dans `scripts/config.js`), chacun avec ses week-ends autorisés et sa fourchette de distance fixés par le staff. Le participant ajoute, modifie ou supprime sa course (nom, date, distance, lieu) via un `<dialog>` ; une saisie hors contrainte est signalée en orange, jamais bloquée (c'est le staff qui valide).
+- Contraintes staff du 14/09/2026 : C1 19–20 ou 26–27 déc. 2026, 10–15 km · C2 20–21 ou 27–28 mars 2027, 20–30 km · C3 29–30 mai ou 5–6 juin 2027, ≤ 40 km · C4 3–4 juil. 2027, 40–50 km.
+- Les courses perso apparaissent sur le calendrier comme les événements d'équipe (tag or). Persistance `localStorage` (`zero_to_100_races_<track>_<prenom>`), indépendante du scénario UTMB.
+- WE Choc #4 ajouté (24–25 juil. 2027, La Rosière, optionnel) — liseré pointillé sur le calendrier.
+- Fix : le `<dialog>` natif était décentré par le reset `margin: 0` (`margin: auto` rétabli).
+
 ## [2.6.1] - 2026-09-01
 - MCC : tracé officiel depuis son propre GPX UTMB (40 km, 2300 m D+, points de contrôle Col de la Forclaz / Col de Balme / Argentière). Plus de tracé dérivé ni de distance approximative — les deux parcours sont désormais exacts.
 - Horaire de départ MCC (lundi 10h00) confirmé par la métadonnée du GPX 2026 (`startdate 2026-08-24T10:00:03+02:00`).

@@ -41,6 +41,26 @@
   const mapBadge       = document.getElementById("map-badge");
   const mapHint        = document.getElementById("map-hint");
   const mapFallback    = document.getElementById("map-fallback");
+  const stepsCard      = document.getElementById("steps-card");
+  const stepFlag       = document.getElementById("step-flag");
+  const stepsTitle     = document.getElementById("steps-title");
+  const stepSub        = document.getElementById("step-sub");
+  const sdDays         = document.getElementById("sd-days");
+  const sdHours        = document.getElementById("sd-hours");
+  const sdMins         = document.getElementById("sd-mins");
+  const sdSecs         = document.getElementById("sd-secs");
+  const stepsList      = document.getElementById("steps-list");
+  const raceDialog     = document.getElementById("race-dialog");
+  const raceForm       = document.getElementById("race-form");
+  const raceDlgTitle   = document.getElementById("race-dialog-title");
+  const raceDlgRule    = document.getElementById("race-dialog-rule");
+  const raceNameIn     = document.getElementById("race-name");
+  const raceDateIn     = document.getElementById("race-date");
+  const raceKmIn       = document.getElementById("race-km");
+  const racePlaceIn    = document.getElementById("race-place");
+  const raceWarning    = document.getElementById("race-warning");
+  const raceCancelBtn  = document.getElementById("race-cancel");
+  const raceDeleteBtn  = document.getElementById("race-delete");
 
   /* Tuiles OSM standard, assombries en CSS (.leaflet-tile-pane) : pas de clé API,
      contrairement aux fonds sombres CARTO / Stadia. */
@@ -49,6 +69,9 @@
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
 
   let countdownTimer = null;
+  let stepTimer      = null;
+  let currentProfile = null;   /* profil affiché, utilisé par le dialog course */
+  let editingSlot    = null;   /* emplacement en cours d'édition dans le dialog */
   let raceMap        = null;   /* instance Leaflet, créée une seule fois */
   let raceLayer      = null;   /* tracé + marqueurs de la course courante */
   let raceMapSlug    = null;   /* course actuellement dessinée */
@@ -56,6 +79,7 @@
 
   const PROFILE_COOKIE  = "zero_to_100_profile";
   const DONE_KEY_PREFIX = "zero_to_100_days_done";
+  const RACES_KEY_PREFIX = "zero_to_100_races";
 
   if (versionNode) versionNode.textContent = safeAppVersion;
 
@@ -200,11 +224,26 @@
 
   /* ── Events ───────────────────────────────────────────────────────────── */
 
-  function buildEventMap(profile, startDate, endDate) {
+  function teamEvents(profile) {
     const events = typeof EVENTS !== "undefined" && Array.isArray(EVENTS) ? EVENTS : [];
+    return events.filter((ev) => Array.isArray(ev.tracks) && ev.tracks.includes(profile.track));
+  }
+
+  /* Événements d'équipe + courses perso du participant, au même format */
+  function allEvents(profile) {
+    const list  = teamEvents(profile).slice();
+    const races = getRaces(profile);
+    for (const slot of raceSlots(profile)) {
+      const race = races[slot.id];
+      if (!race || !race.date) continue;
+      list.push({ label: race.name, start: race.date, end: race.date, type: "race", personal: true });
+    }
+    return list;
+  }
+
+  function buildEventMap(profile, startDate, endDate) {
     const map = {};
-    for (const ev of events) {
-      if (!ev.tracks.includes(profile.track)) continue;
+    for (const ev of allEvents(profile)) {
       const evStart = parseDate(ev.start);
       const evEnd   = parseDate(ev.end);
       const cursor  = new Date(evStart);
@@ -500,6 +539,384 @@
     countdownTimer = window.setInterval(tick, 1000);
   }
 
+  /* ── Courses perso (persistance) ──────────────────────────────────────── */
+
+  function raceSlots(profile) {
+    const slots = typeof RACE_SLOTS === "object" && RACE_SLOTS ? RACE_SLOTS[profile.track] : null;
+    return Array.isArray(slots) ? slots : [];
+  }
+
+  /* Indépendant du scénario UTMB : changer de semaine ne doit pas effacer ses courses */
+  function racesStorageKey(profile) {
+    return `${RACES_KEY_PREFIX}_${profile.track}_${profile.firstName.toLowerCase()}`;
+  }
+
+  function getRaces(profile) {
+    const raw = localStorage.getItem(racesStorageKey(profile));
+    if (!raw) return {};
+    try {
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch { return {}; }
+  }
+
+  function setRaces(profile, races) {
+    localStorage.setItem(racesStorageKey(profile), JSON.stringify(races));
+  }
+
+  function formatShort(date) {
+    return new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short", year: "numeric" }).format(date);
+  }
+
+  /* "24–25 oct. 2026", "30 avr. – 2 mai 2027" ou "sam. 24 oct. 2026" */
+  function formatRange(start, end) {
+    if (toDayKey(start) === toDayKey(end)) {
+      return new Intl.DateTimeFormat("fr-FR", {
+        weekday: "short", day: "numeric", month: "short", year: "numeric"
+      }).format(start);
+    }
+    if (isSameMonth(start, end)) {
+      return `${start.getDate()}–${formatShort(end)}`;
+    }
+    const s = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short" }).format(start);
+    return `${s} – ${formatShort(end)}`;
+  }
+
+  function slotWindows(slot) {
+    return Array.isArray(slot.windows) ? slot.windows.filter((w) => w && w.from && w.to) : [];
+  }
+
+  /* Dernier jour autorisé pour l'emplacement (sert à le ranger dans la liste) */
+  function slotDeadline(slot) {
+    const ws = slotWindows(slot);
+    if (!ws.length) return null;
+    return parseDate(ws.reduce((max, w) => (w.to > max ? w.to : max), ws[0].to));
+  }
+
+  /* "19–20 ou 26–27 déc. 2026" — les fenêtres d'un même mois partagent le suffixe */
+  function windowsText(ws) {
+    const dayFmt = new Intl.DateTimeFormat("fr-FR", { day: "numeric" });
+    const groups = [];
+    for (const w of ws) {
+      const from = parseDate(w.from);
+      const to   = parseDate(w.to);
+      const key  = monthKey(to);
+      const days = isSameMonth(from, to)
+        ? `${dayFmt.format(from)}–${dayFmt.format(to)}`
+        : `${new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short" }).format(from)} – ${dayFmt.format(to)}`;
+      const last = groups[groups.length - 1];
+      if (last && last.key === key) last.days.push(days);
+      else groups.push({ key, days: [days], suffix: new Intl.DateTimeFormat("fr-FR", { month: "short", year: "numeric" }).format(to) });
+    }
+    return groups.map((g) => `${g.days.join(" ou ")} ${g.suffix}`).join(" ou ");
+  }
+
+  function kmText(slot) {
+    if (slot.minKm != null && slot.maxKm != null) return `${slot.minKm}–${slot.maxKm} km`;
+    if (slot.minKm != null) return `≥ ${slot.minKm} km`;
+    if (slot.maxKm != null) return `≤ ${slot.maxKm} km`;
+    return "";
+  }
+
+  /* Texte des contraintes d'un emplacement : "19–20 ou 26–27 déc. 2026 · 10–15 km" */
+  function slotRuleText(slot) {
+    const parts = [];
+    const ws = slotWindows(slot);
+    if (ws.length) parts.push(windowsText(ws));
+    const km = kmText(slot);
+    if (km) parts.push(km);
+    if (slot.note) parts.push(slot.note);
+    return parts.join(" · ");
+  }
+
+  /* Écarts entre la course saisie et les contraintes — signalés, jamais bloquants */
+  function raceIssues(slot, race) {
+    const issues = [];
+    const ws = slotWindows(slot);
+    if (race.date && ws.length && !ws.some((w) => race.date >= w.from && race.date <= w.to)) {
+      issues.push(`hors des dates autorisées (${windowsText(ws)})`);
+    }
+    if (typeof race.km === "number") {
+      if (slot.minKm != null && race.km < slot.minKm) issues.push(`distance sous le minimum (${slot.minKm} km)`);
+      if (slot.maxKm != null && race.km > slot.maxKm) issues.push(`distance au-dessus du maximum (${slot.maxKm} km)`);
+    }
+    return issues;
+  }
+
+  /* ── Étapes (WE Choc + courses perso + course finale) ─────────────────── */
+
+  /*
+   * Une étape = { kind, label, start, end, ts, place, optional, slot, race, issues }
+   *   kind : "choc" | "race" | "slot" (course pas encore choisie) | "final"
+   *   ts   : instant visé par le countdown (minuit local du 1er jour, ou l'heure
+   *          de départ officielle pour la course finale)
+   */
+  function buildSteps(profile) {
+    const steps = [];
+
+    for (const ev of teamEvents(profile)) {
+      const start = parseDate(ev.start);
+      const end   = parseDate(ev.end);
+      steps.push({
+        kind: ev.type === "choc" ? "choc" : "race",
+        label: ev.label, place: ev.place || null, optional: Boolean(ev.optional),
+        start, end, ts: start.getTime(), issues: []
+      });
+    }
+
+    const races = getRaces(profile);
+    for (const slot of raceSlots(profile)) {
+      const race = races[slot.id];
+      if (race && race.date) {
+        const d = parseDate(race.date);
+        steps.push({
+          kind: "race", label: race.name, place: race.place || null, km: race.km,
+          start: d, end: d, ts: d.getTime(), slot, race, issues: raceIssues(slot, race)
+        });
+      } else {
+        /* Pas encore choisie : on la range à la fin de sa fenêtre, sinon en bout de liste */
+        const anchor = slotDeadline(slot);
+        steps.push({ kind: "slot", label: slot.label, start: anchor, end: anchor, ts: anchor ? anchor.getTime() : Infinity, slot, issues: [] });
+      }
+    }
+
+    const info = raceStartInfo(profile);
+    if (info && !Number.isNaN(info.ts)) {
+      steps.push({
+        kind: "final", label: `${info.race} UTMB 2027`, place: info.place,
+        start: info.date, end: info.date, ts: info.ts, issues: []
+      });
+    }
+
+    steps.sort((a, b) => a.ts - b.ts);
+    return steps;
+  }
+
+  function stepStatus(step, todayKey) {
+    if (step.kind === "slot") return "todo";
+    const sKey = toDayKey(step.start);
+    const eKey = toDayKey(step.end);
+    if (eKey < todayKey)  return "past";
+    if (sKey <= todayKey) return "now";
+    return "future";
+  }
+
+  const STEP_FLAGS = { choc: "⚡", race: "🏁", slot: "🏁", final: "🏔️" };
+
+  function stopStepCountdown() {
+    if (stepTimer !== null) {
+      window.clearInterval(stepTimer);
+      stepTimer = null;
+    }
+  }
+
+  function startStepCountdown(ts) {
+    stopStepCountdown();
+    function tick() {
+      const diff = ts - Date.now();
+      if (diff <= 0) {
+        stepsCard.classList.add("countdown-card--go");
+        if (sdDays)  sdDays.textContent  = "0";
+        if (sdHours) sdHours.textContent = "00";
+        if (sdMins)  sdMins.textContent  = "00";
+        if (sdSecs)  sdSecs.textContent  = "00";
+        stopStepCountdown();
+        return;
+      }
+      stepsCard.classList.remove("countdown-card--go");
+      const totalSec = Math.floor(diff / 1000);
+      if (sdDays)  sdDays.textContent  = String(Math.floor(totalSec / 86400));
+      if (sdHours) sdHours.textContent = pad2(Math.floor((totalSec % 86400) / 3600));
+      if (sdMins)  sdMins.textContent  = pad2(Math.floor((totalSec % 3600) / 60));
+      if (sdSecs)  sdSecs.textContent  = pad2(totalSec % 60);
+    }
+    tick();
+    stepTimer = window.setInterval(tick, 1000);
+  }
+
+  function stepMetaText(step) {
+    const bits = [];
+    if (typeof step.km === "number") bits.push(`${step.km} km`);
+    if (step.place) bits.push(step.place);
+    if (step.optional) bits.push("optionnel");
+    return bits.join(" · ");
+  }
+
+  function renderSteps(profile) {
+    if (!stepsCard || !stepsList) return;
+    const now      = new Date();
+    const todayKey = toDayKey(now);
+    const steps    = buildSteps(profile);
+
+    /* Prochaine étape = la première en cours ou à venir (les courses non choisies n'ont pas de date) */
+    const next = steps.find((st) => {
+      const status = stepStatus(st, todayKey);
+      return status === "now" || status === "future";
+    });
+
+    if (next) {
+      const status = stepStatus(next, todayKey);
+      if (stepFlag)   stepFlag.textContent   = STEP_FLAGS[next.kind] || "⛰️";
+      if (stepsTitle) stepsTitle.textContent = next.label;
+      if (stepSub) {
+        const meta = stepMetaText(next);
+        stepSub.textContent = formatRange(next.start, next.end) + (meta ? ` · ${meta}` : "");
+      }
+      startStepCountdown(status === "now" ? 0 : next.ts);
+    } else {
+      stopStepCountdown();
+      if (stepFlag)   stepFlag.textContent   = "🏁";
+      if (stepsTitle) stepsTitle.textContent = "Toutes les étapes sont passées";
+      if (stepSub)    stepSub.textContent    = "";
+      stepsCard.classList.add("countdown-card--go");
+    }
+
+    stepsList.innerHTML = "";
+    for (const step of steps) {
+      const status = stepStatus(step, todayKey);
+      const li = document.createElement("li");
+      li.className = `steps-item steps-item--${status} steps-item--${step.kind}`;
+      if (step === next) li.classList.add("steps-item--next");
+
+      const when = document.createElement("span");
+      when.className = "steps-when";
+      if (step.kind === "slot") {
+        when.textContent = step.start ? `avant le ${formatShort(step.start)}` : "date à définir";
+      } else {
+        when.textContent = formatRange(step.start, step.end);
+      }
+
+      const body = document.createElement("span");
+      body.className = "steps-body";
+      const name = document.createElement("span");
+      name.className = "steps-label";
+      name.textContent = step.kind === "slot" ? `${step.label} · à choisir` : step.label;
+      body.appendChild(name);
+
+      const metaText = step.kind === "slot" ? slotRuleText(step.slot) : stepMetaText(step);
+      if (metaText || step.issues.length) {
+        const meta = document.createElement("span");
+        meta.className = "steps-meta";
+        meta.textContent = step.issues.length
+          ? `⚠️ ${step.issues.join(", ")}${metaText ? " · " + metaText : ""}`
+          : metaText;
+        if (step.issues.length) meta.classList.add("steps-meta--warn");
+        body.appendChild(meta);
+      }
+
+      const right = document.createElement("span");
+      right.className = "steps-right";
+      if (step.kind === "slot") {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "btn-ghost btn-ghost--sm";
+        btn.textContent = "Ajouter";
+        btn.addEventListener("click", () => openRaceDialog(step.slot, null));
+        right.appendChild(btn);
+      } else {
+        const jd = document.createElement("span");
+        jd.className = "steps-jd";
+        if (status === "past")     jd.textContent = "✓";
+        else if (status === "now") jd.textContent = "J";
+        else                       jd.textContent = `J-${daysDiff(now, step.start)}`;
+        right.appendChild(jd);
+        if (step.slot) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "btn-ghost btn-ghost--sm";
+          btn.textContent = "Modifier";
+          btn.setAttribute("aria-label", `Modifier ${step.label}`);
+          btn.addEventListener("click", () => openRaceDialog(step.slot, step.race));
+          right.appendChild(btn);
+        }
+      }
+
+      li.appendChild(when);
+      li.appendChild(body);
+      li.appendChild(right);
+      stepsList.appendChild(li);
+    }
+  }
+
+  /* ── Dialog course perso ──────────────────────────────────────────────── */
+
+  function readRaceForm() {
+    const km = parseFloat(String(raceKmIn.value).replace(",", "."));
+    return {
+      name:  raceNameIn.value.trim(),
+      date:  raceDateIn.value,
+      km:    Number.isFinite(km) ? km : null,
+      place: racePlaceIn.value.trim()
+    };
+  }
+
+  function refreshRaceWarning() {
+    if (!editingSlot || !raceWarning) return;
+    const issues = raceIssues(editingSlot, readRaceForm());
+    raceWarning.textContent = issues.length ? `⚠️ Hors contrainte : ${issues.join(", ")}. À valider avec le staff.` : "";
+    raceWarning.classList.toggle("hidden", issues.length === 0);
+  }
+
+  function openRaceDialog(slot, race) {
+    if (!raceDialog || !currentProfile) return;
+    editingSlot = slot;
+    if (raceDlgTitle) raceDlgTitle.textContent = slot.label;
+    if (raceDlgRule) {
+      const rule = slotRuleText(slot);
+      raceDlgRule.textContent = rule;
+      raceDlgRule.classList.toggle("hidden", !rule);
+    }
+    raceNameIn.value  = race ? race.name || "" : "";
+    raceDateIn.value  = race ? race.date || "" : "";
+    raceKmIn.value    = race && typeof race.km === "number" ? String(race.km) : "";
+    racePlaceIn.value = race ? race.place || "" : "";
+    if (raceDeleteBtn) raceDeleteBtn.classList.toggle("hidden", !race);
+    refreshRaceWarning();
+    if (typeof raceDialog.showModal === "function") raceDialog.showModal();
+    else raceDialog.setAttribute("open", "");
+    raceNameIn.focus();
+  }
+
+  function closeRaceDialog() {
+    editingSlot = null;
+    if (!raceDialog) return;
+    if (typeof raceDialog.close === "function" && raceDialog.open) raceDialog.close();
+    else raceDialog.removeAttribute("open");
+  }
+
+  function afterRaceChange() {
+    if (!currentProfile) return;
+    renderSteps(currentProfile);
+    renderCalendar(currentProfile);
+  }
+
+  if (raceForm) {
+    raceForm.addEventListener("input", refreshRaceWarning);
+    raceForm.addEventListener("submit", function onRaceSubmit(event) {
+      event.preventDefault();
+      if (!editingSlot || !currentProfile) return;
+      const race = readRaceForm();
+      if (!race.name || !race.date || race.km === null) return;
+      const races = getRaces(currentProfile);
+      races[editingSlot.id] = race;
+      setRaces(currentProfile, races);
+      closeRaceDialog();
+      afterRaceChange();
+    });
+  }
+  if (raceCancelBtn) raceCancelBtn.addEventListener("click", closeRaceDialog);
+  if (raceDeleteBtn) {
+    raceDeleteBtn.addEventListener("click", function onRaceDelete() {
+      if (!editingSlot || !currentProfile) return;
+      const races = getRaces(currentProfile);
+      delete races[editingSlot.id];
+      setRaces(currentProfile, races);
+      closeRaceDialog();
+      afterRaceChange();
+    });
+  }
+  if (raceDialog) raceDialog.addEventListener("close", () => { editingSlot = null; });
+
   /* ── Render ───────────────────────────────────────────────────────────── */
 
   function renderCalendar(profile) {
@@ -638,6 +1055,7 @@
         const ev = eventMap[dayKey];
         if (ev) {
           cell.classList.add(`day-cell--event-${ev.type}`);
+          if (ev.optional) cell.classList.add("day-cell--event-optional");
           const tag = document.createElement("span");
           tag.className   = "event-tag";
           tag.textContent = ev.label;
@@ -659,7 +1077,10 @@
     onboardingCard.classList.add("hidden");
     trackerCard.classList.remove("hidden");
     calendarCard.classList.remove("hidden");
+    currentProfile = profile;
     startCountdown(profile);
+    if (stepsCard) stepsCard.classList.remove("hidden");
+    renderSteps(profile);
     renderCalendar(profile);
   }
 
@@ -667,8 +1088,11 @@
     onboardingCard.classList.remove("hidden");
     trackerCard.classList.add("hidden");
     calendarCard.classList.add("hidden");
+    currentProfile = null;
     stopCountdown();
+    stopStepCountdown();
     if (countdownCard) countdownCard.classList.add("hidden");
+    if (stepsCard) stepsCard.classList.add("hidden");
   }
 
   /* ── Events ───────────────────────────────────────────────────────────── */

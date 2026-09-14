@@ -1,4 +1,4 @@
-const APP_VERSION = "2.6.1";
+const APP_VERSION = "2.7.0";
 
 /*
  * raceStart — départ de la course 2027, relatif au lundi de la semaine UTMB choisie.
@@ -36,6 +36,10 @@ const TRACKS = {
   }
 };
 
+/*
+ * EVENTS — étapes collectives fixées par le staff (WE Choc, courses d'équipe).
+ * `place` et `optional` sont facultatifs. Les dates sont inclusives.
+ */
 const EVENTS = [
   {
     label: "WE Choc #1",
@@ -64,8 +68,56 @@ const EVENTS = [
     end:   "2027-05-17",
     tracks: ["0to100", "0to40"],
     type: "choc"
+  },
+  {
+    label: "WE Choc #4",
+    start: "2027-07-24",
+    end:   "2027-07-25",
+    place: "La Rosière",
+    tracks: ["0to100", "0to40"],
+    type: "choc",
+    optional: true
   }
 ];
+
+/*
+ * RACE_SLOTS — les 4 courses de préparation. Chaque participant choisit les
+ * siennes (validation par le staff) ; l'app stocke son choix en local.
+ * Chaque emplacement porte les contraintes du staff :
+ *   windows : week-ends autorisés, liste de fenêtres { from, to } inclusives
+ *             (la course doit tomber dans l'une d'elles)
+ *   minKm / maxKm : distance attendue (l'un ou l'autre peut être null)
+ *   note    : précision libre, facultative
+ * Une saisie hors contrainte est signalée, pas bloquée (c'est le staff qui tranche).
+ * Contraintes communiquées par le staff le 14/09/2026, identiques pour les deux parcours.
+ */
+const RACE_SLOT_RULES = [
+  {
+    id: "race1", label: "Course 1",
+    windows: [{ from: "2026-12-19", to: "2026-12-20" }, { from: "2026-12-26", to: "2026-12-27" }],
+    minKm: 10, maxKm: 15
+  },
+  {
+    id: "race2", label: "Course 2",
+    windows: [{ from: "2027-03-20", to: "2027-03-21" }, { from: "2027-03-27", to: "2027-03-28" }],
+    minKm: 20, maxKm: 30
+  },
+  {
+    id: "race3", label: "Course 3",
+    windows: [{ from: "2027-05-29", to: "2027-05-30" }, { from: "2027-06-05", to: "2027-06-06" }],
+    minKm: null, maxKm: 40
+  },
+  {
+    id: "race4", label: "Course 4",
+    windows: [{ from: "2027-07-03", to: "2027-07-04" }],
+    minKm: 40, maxKm: 50
+  }
+];
+
+const RACE_SLOTS = {
+  "0to100": RACE_SLOT_RULES,
+  "0to40":  RACE_SLOT_RULES
+};
 
 const UTMB_SCENARIOS = {
   week1: {

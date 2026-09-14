@@ -92,6 +92,27 @@
         <button id="reset-profile" type="button" class="btn-ghost">Modifier mon profil</button>
       </section>
 
+      <section id="steps-card" class="glass-card steps-card hidden" aria-labelledby="steps-title">
+        <div class="countdown-head">
+          <span class="countdown-flag" id="step-flag" aria-hidden="true">⛰️</span>
+          <div>
+            <p class="steps-kicker">Prochaine étape</p>
+            <h2 id="steps-title" class="steps-title">—</h2>
+            <p class="countdown-sub" id="step-sub">—</p>
+          </div>
+        </div>
+
+        <div class="countdown-grid" id="step-grid" role="timer">
+          <div class="cd-unit"><span class="cd-num" id="sd-days">—</span><span class="cd-lbl">jours</span></div>
+          <div class="cd-unit"><span class="cd-num" id="sd-hours">—</span><span class="cd-lbl">heures</span></div>
+          <div class="cd-unit"><span class="cd-num" id="sd-mins">—</span><span class="cd-lbl">min</span></div>
+          <div class="cd-unit"><span class="cd-num" id="sd-secs">—</span><span class="cd-lbl">sec</span></div>
+        </div>
+        <p class="countdown-go" id="step-go">C'EST MAINTENANT 🔥</p>
+
+        <ol class="steps-list" id="steps-list"></ol>
+      </section>
+
       <section id="countdown-card" class="glass-card countdown-card hidden" aria-labelledby="countdown-title">
         <div class="countdown-head">
           <span class="countdown-flag" aria-hidden="true">🏔️</span>
@@ -129,6 +150,39 @@
       </footer>
 
     </main>
+
+    <dialog id="race-dialog" class="race-dialog">
+      <form id="race-form" method="dialog">
+        <h2 id="race-dialog-title" class="race-dialog-title">Course</h2>
+        <p id="race-dialog-rule" class="race-dialog-rule"></p>
+        <div class="field">
+          <label for="race-name">Nom de la course</label>
+          <input id="race-name" name="name" type="text" maxlength="60" required placeholder="Ex. Trail des Aiguilles Rouges" />
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="race-date">Date</label>
+            <input id="race-date" name="date" type="date" required />
+          </div>
+          <div class="field">
+            <label for="race-km">Distance (km)</label>
+            <input id="race-km" name="km" type="number" min="1" max="400" step="0.1" inputmode="decimal" required placeholder="42" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="race-place">Lieu <span class="label-opt">(facultatif)</span></label>
+          <input id="race-place" name="place" type="text" maxlength="60" placeholder="Chamonix" />
+        </div>
+        <p id="race-warning" class="race-warning hidden"></p>
+        <div class="race-dialog-actions">
+          <button type="submit" class="btn-primary" value="save">Enregistrer</button>
+          <div class="race-dialog-secondary">
+            <button type="button" class="btn-ghost" id="race-cancel">Annuler</button>
+            <button type="button" class="btn-ghost btn-ghost--danger hidden" id="race-delete">Supprimer</button>
+          </div>
+        </div>
+      </form>
+    </dialog>
 
     <div id="celebration-layer" class="celebration-layer hidden" aria-live="polite"></div>
 
