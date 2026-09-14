@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.8.0] - 2026-09-14
+- Case **« Validée par le staff »** dans le dialog de course : non cochée, la course est une piste (« ⏳ En attente de validation », nom en italique, liseré pointillé dans la liste et sur le calendrier) ; cochée, elle est définitive (« ✓ Validée par le staff » en vert). Champ `validated` dans le `localStorage`, absent = non validée.
+
 ## [2.7.1] - 2026-09-14
 - Distances des courses de préparation propres au parcours **0 to 40** : C1 10–15 km · C2 10–15 km · C3 ≤ 20 km · C4 20–25 km (mêmes week-ends que le 0 to 100). Les fenêtres de dates sont factorisées dans `RACE_WINDOWS`.
 

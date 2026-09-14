@@ -173,6 +173,11 @@
           <label for="race-place">Lieu <span class="label-opt">(facultatif)</span></label>
           <input id="race-place" name="place" type="text" maxlength="60" placeholder="Chamonix" />
         </div>
+        <label class="check-field" for="race-validated">
+          <input id="race-validated" name="validated" type="checkbox" />
+          <span class="check-box" aria-hidden="true"></span>
+          <span class="check-text">Validée par le staff<small>Non cochée = course envisagée, en attente de validation</small></span>
+        </label>
         <p id="race-warning" class="race-warning hidden"></p>
         <div class="race-dialog-actions">
           <button type="submit" class="btn-primary" value="save">Enregistrer</button>

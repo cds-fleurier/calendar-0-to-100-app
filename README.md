@@ -7,9 +7,9 @@ Application web statique (HTML/CSS/JS vanilla), mobile-first, deployee sur GitHu
 - CSS3
 - JavaScript vanilla
 
-## Fonctionnalites V2.7.1
+## Fonctionnalites V2.8.0
 - Carte Etapes : countdown live sur l'etape la plus proche (WE Choc, course perso ou course finale) + liste chronologique de toutes les etapes avec J-n.
-- Courses de preparation personnelles : 4 emplacements definis dans `RACE_SLOTS` (`scripts/config.js`) avec week-ends autorises (`windows`) et distance (`minKm` / `maxKm`). Saisie par le participant (dialog), stockee en `localStorage`, ecarts aux contraintes signales mais non bloquants.
+- Courses de preparation personnelles : 4 emplacements definis dans `RACE_SLOTS` (`scripts/config.js`) avec week-ends autorises (`windows`) et distance (`minKm` / `maxKm`). Saisie par le participant (dialog), stockee en `localStorage`, ecarts aux contraintes signales mais non bloquants. Case "Validee par le staff" : course envisagee (pointille) ou definitive.
 - Evenements d'equipe dans `EVENTS` (`place` et `optional` facultatifs).
 
 ## Fonctionnalites V2.6.1

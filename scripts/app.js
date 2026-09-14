@@ -58,6 +58,7 @@
   const raceDateIn     = document.getElementById("race-date");
   const raceKmIn       = document.getElementById("race-km");
   const racePlaceIn    = document.getElementById("race-place");
+  const raceValidIn    = document.getElementById("race-validated");
   const raceWarning    = document.getElementById("race-warning");
   const raceCancelBtn  = document.getElementById("race-cancel");
   const raceDeleteBtn  = document.getElementById("race-delete");
@@ -236,7 +237,7 @@
     for (const slot of raceSlots(profile)) {
       const race = races[slot.id];
       if (!race || !race.date) continue;
-      list.push({ label: race.name, start: race.date, end: race.date, type: "race", personal: true });
+      list.push({ label: race.name, start: race.date, end: race.date, type: "race", personal: true, optional: !race.validated });
     }
     return list;
   }
@@ -671,6 +672,7 @@
         const d = parseDate(race.date);
         steps.push({
           kind: "race", label: race.name, place: race.place || null, km: race.km,
+          validated: Boolean(race.validated),
           start: d, end: d, ts: d.getTime(), slot, race, issues: raceIssues(slot, race)
         });
       } else {
@@ -777,6 +779,7 @@
       const li = document.createElement("li");
       li.className = `steps-item steps-item--${status} steps-item--${step.kind}`;
       if (step === next) li.classList.add("steps-item--next");
+      if (step.slot && step.kind === "race" && !step.validated) li.classList.add("steps-item--pending");
 
       const when = document.createElement("span");
       when.className = "steps-when";
@@ -792,6 +795,14 @@
       name.className = "steps-label";
       name.textContent = step.kind === "slot" ? `${step.label} · à choisir` : step.label;
       body.appendChild(name);
+
+      /* Course perso : statut de validation par le staff */
+      if (step.slot && step.kind === "race") {
+        const badge = document.createElement("span");
+        badge.className = `steps-status ${step.validated ? "steps-status--ok" : "steps-status--pending"}`;
+        badge.textContent = step.validated ? "✓ Validée par le staff" : "⏳ En attente de validation";
+        body.appendChild(badge);
+      }
 
       const metaText = step.kind === "slot" ? slotRuleText(step.slot) : stepMetaText(step);
       if (metaText || step.issues.length) {
@@ -846,7 +857,8 @@
       name:  raceNameIn.value.trim(),
       date:  raceDateIn.value,
       km:    Number.isFinite(km) ? km : null,
-      place: racePlaceIn.value.trim()
+      place: racePlaceIn.value.trim(),
+      validated: Boolean(raceValidIn && raceValidIn.checked)
     };
   }
 
@@ -870,6 +882,7 @@
     raceDateIn.value  = race ? race.date || "" : "";
     raceKmIn.value    = race && typeof race.km === "number" ? String(race.km) : "";
     racePlaceIn.value = race ? race.place || "" : "";
+    if (raceValidIn) raceValidIn.checked = Boolean(race && race.validated);
     if (raceDeleteBtn) raceDeleteBtn.classList.toggle("hidden", !race);
     refreshRaceWarning();
     if (typeof raceDialog.showModal === "function") raceDialog.showModal();
