@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.9.0] - 2026-09-21
+- Barre d'onglets partagée de la team (hub `0to100-hub/nav.js`) : Calendrier · Carte · Qui court où · Séances, en bas d'écran.
+
 ## [2.8.1] - 2026-09-14
 - Lieux des WE Choc : #2 Besançon, #3 Bellevaux (Haute-Savoie).
 

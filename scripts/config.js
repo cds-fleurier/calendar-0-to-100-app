@@ -1,4 +1,4 @@
-const APP_VERSION = "2.8.1";
+const APP_VERSION = "2.9.0";
 
 /*
  * raceStart — départ de la course 2027, relatif au lundi de la semaine UTMB choisie.
