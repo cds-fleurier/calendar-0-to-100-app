@@ -205,6 +205,17 @@
     : [];
   const rosterById = {};
   for (const p of ROSTER) rosterById[p.id] = p;
+
+  /* Invités (pas dans le trombinoscope) : id "guest|<100|40>|<Prénom>", partagé avec Qui court où */
+  const GUEST_PREFIX = "guest|";
+  function guestId(group, name) { return GUEST_PREFIX + group + "|" + String(name).trim().replace(/\|/g, " "); }
+  function guestFromId(id) {
+    if (typeof id !== "string" || !id.startsWith(GUEST_PREFIX)) return null;
+    const [, group, name] = id.split("|");
+    if (!name || !["100", "40"].includes(group)) return null;
+    return { id, name, group, photo: "", guest: true };
+  }
+  function person(id) { return rosterById[id] || guestFromId(id); }
   const TEAM_TRACK = { "100": "0to100", "40": "0to40" };
   const teamMeKey  = typeof TEAM_ME_KEY === "string" ? TEAM_ME_KEY : "team_me";
 
@@ -213,7 +224,7 @@
   }
 
   function getTeamMe() {
-    try { const v = localStorage.getItem(teamMeKey); return v && rosterById[v] ? v : null; } catch { return null; }
+    try { const v = localStorage.getItem(teamMeKey); return v && person(v) ? v : null; } catch { return null; }
   }
 
   function setTeamMe(id) {
@@ -245,6 +256,12 @@
         og.appendChild(o);
       }
       if (og.children.length) select.appendChild(og);
+    }
+    const guest = guestFromId(getTeamMe());
+    if (guest) {
+      const o = document.createElement("option");
+      o.value = guest.id; o.textContent = `${guest.name} (invité)`;
+      select.appendChild(o);
     }
     const other = document.createElement("option");
     other.value = "__other"; other.textContent = "Je ne suis pas dans la liste";
@@ -310,7 +327,7 @@
       (choice.course !== "autre" || normName(c.note) === normName(choice.note));
     const companions = teamChoices
       .filter((c) => c.participant !== profile.participantId && sameCourse(c))
-      .map((c) => rosterById[c.participant]).filter(Boolean)
+      .map((c) => person(c.participant)).filter(Boolean)
       .map((p) => p.name).sort((a, b) => a.localeCompare(b, "fr"));
 
     if (choice.course === "autre") {
@@ -989,14 +1006,15 @@
           link.href = teamBlocUrl(step.slot);
           link.textContent = "Choisir";
           right.appendChild(link);
-        } else {
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.className = "btn-ghost btn-ghost--sm";
-          btn.textContent = "Ajouter";
-          btn.addEventListener("click", () => openRaceDialog(step.slot, null));
-          right.appendChild(btn);
         }
+        /* Saisie manuelle toujours possible : le calendrier marche aussi tout seul */
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "btn-ghost btn-ghost--sm btn-ghost--quiet";
+        btn.textContent = profile.participantId ? "saisir" : "Ajouter";
+        btn.title = "Saisir une course à la main (sans passer par Qui court où)";
+        btn.addEventListener("click", () => openRaceDialog(step.slot, null));
+        right.appendChild(btn);
       } else {
         const jd = document.createElement("span");
         jd.className = "steps-jd";
@@ -1323,15 +1341,16 @@
     event.preventDefault();
     const fd         = new FormData(onboardingForm);
     const pid        = String(fd.get("participant") || "");
-    const person     = rosterById[pid] || null;
+    const person     = rosterById[pid] || guestFromId(pid) || null;
     const firstName  = person ? person.name : String(fd.get("firstName") || "").trim();
     const track      = String(fd.get("track") || "");
     const utmbScenario = String(fd.get("utmbScenario") || "");
     if (!firstName || !safeTracks[track] || !safeUtmbScenarios[utmbScenario]) return;
     const profile = { firstName, track, utmbScenario };
-    if (person) profile.participantId = person.id;
+    /* Dans le trombi → son id ; sinon un id invité partagé avec Qui court où (mêmes courses) */
+    profile.participantId = person ? person.id : guestId(track === "0to40" ? "40" : "100", firstName);
     saveProfile(profile);
-    if (person) setTeamMe(person.id);
+    setTeamMe(profile.participantId);
     showTracker(profile);
   });
 
@@ -1347,7 +1366,7 @@
     if (ROSTER.length) {
       fillRosterSelect(participantSel, "— choisis ton prénom —");
       participantSel.addEventListener("change", () => {
-        const p = rosterById[participantSel.value];
+        const p = person(participantSel.value);
         const other = participantSel.value === "__other";
         if (firstNameField) firstNameField.classList.toggle("hidden", !other);
         if (firstNameIn) firstNameIn.required = other;

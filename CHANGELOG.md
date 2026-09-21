@@ -9,8 +9,11 @@
   la saisie locale dans les étapes et le calendrier — nom + département, distance, date
   (samedi du week-end ou jour précis), validation staff, et **qui d'autre y va**.
   Boutons « Choisir » / « Modifier » → renvoient vers le bloc concerné de Qui court où.
-  Cache localStorage des choix pour l'affichage hors ligne. La saisie locale ne sert plus
-  qu'aux profils non reliés (héritage).
+  Cache localStorage des choix pour l'affichage hors ligne.
+- **Les outils restent utilisables séparément** : « Je ne suis pas dans la liste » crée un
+  identifiant invité (`guest|<100|40>|<Prénom>`) partagé avec Qui court où ; et la saisie
+  manuelle d'une course (bouton discret « saisir ») reste possible pour tout le monde,
+  le choix Qui court où prenant le dessus s'il existe.
 
 ## [2.9.0] - 2026-09-21
 - Barre d'onglets partagée de la team (hub `0to100-hub/nav.js`) : Calendrier · Carte · Qui court où · Séances, en bas d'écran.

@@ -921,6 +921,9 @@ select:focus {
   font-weight: 600;
 }
 .steps-right a.btn-ghost { text-decoration: none; display: inline-block; }
+.steps-item--slot .steps-right { flex-direction: column; align-items: flex-end; gap: 4px; }
+.btn-ghost--quiet { opacity: .6; font-size: 0.7rem; }
+.btn-ghost--quiet:hover { opacity: 1; }
 
 /* Liaison du profil à la team */
 .link-team {
