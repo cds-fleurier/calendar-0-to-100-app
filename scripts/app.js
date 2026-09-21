@@ -842,7 +842,8 @@
           kind: "race", label: race.name, place: race.place || null, km: race.km,
           validated: Boolean(race.validated), team: Boolean(race.team),
           companions: race.companions || [], dateApprox: Boolean(race.dateApprox),
-          start: d, end: d, ts: d.getTime(), slot, race, issues: raceIssues(slot, race)
+          /* La liste Qui court où est validée par le staff : pas d'alerte de contrainte dessus */
+          start: d, end: d, ts: d.getTime(), slot, race, issues: race.team ? [] : raceIssues(slot, race)
         });
       } else {
         /* Pas encore choisie : on la range à la fin de sa fenêtre, sinon en bout de liste */
@@ -1382,8 +1383,19 @@
 
   if (linkGoBtn) {
     linkGoBtn.addEventListener("click", () => {
-      if (!currentProfile || !linkParticipant || !rosterById[linkParticipant.value]) return;
-      showTracker(linkProfile(currentProfile, linkParticipant.value));
+      if (!currentProfile || !linkParticipant) return;
+      const v = linkParticipant.value;
+      if (v === "__other") {
+        /* Pas dans le trombi : identifiant invité, partagé avec Qui court où */
+        const gid = guestId(currentProfile.track === "0to40" ? "40" : "100", currentProfile.firstName);
+        const linked = Object.assign({}, currentProfile, { participantId: gid });
+        saveProfile(linked);
+        setTeamMe(gid);
+        showTracker(linked);
+        return;
+      }
+      if (!rosterById[v]) return;
+      showTracker(linkProfile(currentProfile, v));
     });
   }
 
