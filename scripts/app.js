@@ -331,6 +331,7 @@
       .map((p) => p.name).sort((a, b) => a.localeCompare(b, "fr"));
 
     if (choice.course === "autre") {
+      /* Hors liste : en attente tant que le staff ne l'a pas cochée dans le Sheet */
       return {
         name: choice.note || "Autre course", date: ws.length ? ws[0].from : null, km: null, place: null,
         validated, team: true, other: true, dateApprox: true, bloc, companions
@@ -338,17 +339,32 @@
     }
     const course = courseById[choice.course];
     if (!course) return null;
+    /* Course de la liste du staff : validée par construction */
     return {
       name: course.dept ? `${course.name} (${course.dept})` : course.name,
       date: course.date || course.weekend || (ws.length ? ws[0].from : null),
       km: typeof course.km === "number" ? course.km : null,
-      place: null, validated, team: true, bloc, companions
+      place: null, validated: true, team: true, bloc, companions
     };
+  }
+
+  /* Une saisie manuelle dont le nom correspond à une course de la liste du staff est validée aussi */
+  function inStaffList(name) {
+    const n = normName(name);
+    if (n.length < 4) return false;
+    return COURSES_LIST.some((c) => {
+      const cn = normName(c.name);
+      return cn === n || cn.includes(n) || n.includes(cn);
+    });
   }
 
   /* Course affichée pour l'emplacement : « Qui court où ? » d'abord, sinon la saisie locale (héritage) */
   function raceForSlot(profile, slot, localRaces) {
-    return teamRaceFor(profile, slot) || localRaces[slot.id] || null;
+    const team = teamRaceFor(profile, slot);
+    if (team) return team;
+    const local = localRaces[slot.id];
+    if (!local) return null;
+    return local.validated || !inStaffList(local.name) ? local : Object.assign({}, local, { validated: true });
   }
 
   function teamBlocUrl(slot) {
@@ -842,8 +858,8 @@
           kind: "race", label: race.name, place: race.place || null, km: race.km,
           validated: Boolean(race.validated), team: Boolean(race.team),
           companions: race.companions || [], dateApprox: Boolean(race.dateApprox),
-          /* La liste Qui court où est validée par le staff : pas d'alerte de contrainte dessus */
-          start: d, end: d, ts: d.getTime(), slot, race, issues: race.team ? [] : raceIssues(slot, race)
+          /* Validée par le staff (liste, case cochée ou nom dans la liste) → pas d'alerte de contrainte */
+          start: d, end: d, ts: d.getTime(), slot, race, issues: race.validated ? [] : raceIssues(slot, race)
         });
       } else {
         /* Pas encore choisie : on la range à la fin de sa fenêtre, sinon en bout de liste */

@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.0.1] - 2026-09-21
+- Une course de la liste du staff est **validée d'office** (plus de « en attente ») ; seule une
+  « autre course » attend la validation dans le Sheet. Une saisie manuelle dont le nom
+  correspond à une course de la liste est validée aussi.
+- Plus d'alerte de distance/date sur une course validée (la contrainte ne concerne que les
+  courses hors liste non validées).
+
 ## [3.0.0] - 2026-09-21
 - **Liaison avec la team.** L'onboarding propose le roster de la carte (« Qui es-tu ? »),
   le parcours se règle tout seul ; identité partagée avec les autres outils via la clé
