@@ -78,6 +78,14 @@
   let raceMapSlug    = null;   /* course actuellement dessinée */
   const routeCache   = {};
 
+  const participantSel  = document.getElementById("participant");
+  const firstNameIn     = document.getElementById("first-name");
+  const firstNameField  = document.getElementById("first-name-field");
+  const trackSel        = document.getElementById("track");
+  const linkTeamBox     = document.getElementById("link-team");
+  const linkParticipant = document.getElementById("link-participant");
+  const linkGoBtn       = document.getElementById("link-go");
+
   const PROFILE_COOKIE  = "zero_to_100_profile";
   const DONE_KEY_PREFIX = "zero_to_100_days_done";
   const RACES_KEY_PREFIX = "zero_to_100_races";
@@ -189,6 +197,149 @@
     setCookie(PROFILE_COOKIE, "", -1);
   }
 
+  /* ── Identité partagée avec les autres outils de la team ─────────────── */
+
+  /* Roster de la carte (window.PARTICIPANTS) — vide si le script n'a pas chargé (offline) */
+  const ROSTER = Array.isArray(window.PARTICIPANTS)
+    ? window.PARTICIPANTS.slice().sort((a, b) => a.name.localeCompare(b.name, "fr"))
+    : [];
+  const rosterById = {};
+  for (const p of ROSTER) rosterById[p.id] = p;
+  const TEAM_TRACK = { "100": "0to100", "40": "0to40" };
+  const teamMeKey  = typeof TEAM_ME_KEY === "string" ? TEAM_ME_KEY : "team_me";
+
+  function normName(str) {
+    return String(str || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+  }
+
+  function getTeamMe() {
+    try { const v = localStorage.getItem(teamMeKey); return v && rosterById[v] ? v : null; } catch { return null; }
+  }
+
+  function setTeamMe(id) {
+    try { if (id) localStorage.setItem(teamMeKey, id); } catch { /* stockage indisponible */ }
+  }
+
+  /* Retrouve le participant du roster à partir d'un prénom saisi librement (profils d'avant la v3) */
+  function matchRoster(firstName) {
+    const n = normName(firstName);
+    if (!n) return null;
+    const exact = ROSTER.filter((p) => normName(p.name) === n);
+    if (exact.length === 1) return exact[0];
+    const first = ROSTER.filter((p) => normName(p.name).split(" ")[0] === n.split(" ")[0]);
+    return first.length === 1 ? first[0] : null;
+  }
+
+  function fillRosterSelect(select, placeholder) {
+    if (!select) return;
+    select.innerHTML = "";
+    const first = document.createElement("option");
+    first.value = ""; first.textContent = placeholder;
+    select.appendChild(first);
+    for (const [group, label] of [["100", "0 to 100"], ["40", "0 to 40"]]) {
+      const og = document.createElement("optgroup");
+      og.label = label;
+      for (const p of ROSTER.filter((x) => x.group === group)) {
+        const o = document.createElement("option");
+        o.value = p.id; o.textContent = p.name;
+        og.appendChild(o);
+      }
+      if (og.children.length) select.appendChild(og);
+    }
+    const other = document.createElement("option");
+    other.value = "__other"; other.textContent = "Je ne suis pas dans la liste";
+    select.appendChild(other);
+  }
+
+  /* Relie le profil à un participant : mémorise l'id + le partage avec les autres outils */
+  function linkProfile(profile, participantId) {
+    const p = rosterById[participantId];
+    if (!p) return profile;
+    const linked = Object.assign({}, profile, { participantId: p.id });
+    saveProfile(linked);
+    setTeamMe(p.id);
+    return linked;
+  }
+
+  /* ── Courses choisies dans « Qui court où ? » ─────────────────────────── */
+
+  const TEAM_CACHE_KEY = "team_choices_cache";
+  const COURSES_LIST   = Array.isArray(window.COURSES) ? window.COURSES : [];
+  const courseById     = {};
+  for (const c of COURSES_LIST) courseById[c.id] = c;
+  let teamChoices = null;   /* null tant que rien n'est chargé (ni réseau, ni cache) */
+
+  function readTeamCache() {
+    try {
+      const raw = localStorage.getItem(TEAM_CACHE_KEY);
+      const parsed = raw ? JSON.parse(raw) : null;
+      return parsed && Array.isArray(parsed.choices) ? parsed.choices : null;
+    } catch { return null; }
+  }
+
+  async function loadTeamChoices() {
+    const api = typeof TEAM_CHOICES_API === "string" ? TEAM_CHOICES_API : "";
+    if (teamChoices === null) teamChoices = readTeamCache();
+    if (!api) return;
+    try {
+      const res  = await fetch(api, { cache: "no-store" });
+      const data = await res.json();
+      if (data && data.ok && Array.isArray(data.choices)) {
+        teamChoices = data.choices;
+        try { localStorage.setItem(TEAM_CACHE_KEY, JSON.stringify({ at: Date.now(), choices: data.choices })); } catch { /* plein */ }
+      }
+    } catch (err) {
+      console.warn("Qui court où : choix indisponibles, on garde le cache", err);
+    }
+  }
+
+  function blocOfSlot(slot) {
+    return typeof SLOT_BLOCS === "object" && SLOT_BLOCS ? SLOT_BLOCS[slot.id] || null : null;
+  }
+
+  /* Course déclarée dans « Qui court où ? » pour cet emplacement, au format des courses perso */
+  function teamRaceFor(profile, slot) {
+    if (!profile.participantId || !Array.isArray(teamChoices)) return null;
+    const bloc = blocOfSlot(slot);
+    if (!bloc) return null;
+    const choice = teamChoices.find((c) => c.participant === profile.participantId && c.bloc === bloc && c.course);
+    if (!choice) return null;
+    const validated = /^(1|true|oui|x|ok|yes|✓)$/i.test(String(choice.validated || "").trim());
+    const ws = slotWindows(slot);
+    const sameCourse = (c) => c.bloc === bloc && c.course === choice.course &&
+      (choice.course !== "autre" || normName(c.note) === normName(choice.note));
+    const companions = teamChoices
+      .filter((c) => c.participant !== profile.participantId && sameCourse(c))
+      .map((c) => rosterById[c.participant]).filter(Boolean)
+      .map((p) => p.name).sort((a, b) => a.localeCompare(b, "fr"));
+
+    if (choice.course === "autre") {
+      return {
+        name: choice.note || "Autre course", date: ws.length ? ws[0].from : null, km: null, place: null,
+        validated, team: true, other: true, dateApprox: true, bloc, companions
+      };
+    }
+    const course = courseById[choice.course];
+    if (!course) return null;
+    return {
+      name: course.dept ? `${course.name} (${course.dept})` : course.name,
+      date: course.date || course.weekend || (ws.length ? ws[0].from : null),
+      km: typeof course.km === "number" ? course.km : null,
+      place: null, validated, team: true, bloc, companions
+    };
+  }
+
+  /* Course affichée pour l'emplacement : « Qui court où ? » d'abord, sinon la saisie locale (héritage) */
+  function raceForSlot(profile, slot, localRaces) {
+    return teamRaceFor(profile, slot) || localRaces[slot.id] || null;
+  }
+
+  function teamBlocUrl(slot) {
+    const base = typeof TEAM_APP_URL === "string" ? TEAM_APP_URL : "";
+    const bloc = blocOfSlot(slot);
+    return bloc ? `${base}#bloc-${bloc}` : base;
+  }
+
   /* ── Done-days persistence ────────────────────────────────────────────── */
 
   function doneStorageKey(profile) {
@@ -235,7 +386,7 @@
     const list  = teamEvents(profile).slice();
     const races = getRaces(profile);
     for (const slot of raceSlots(profile)) {
-      const race = races[slot.id];
+      const race = raceForSlot(profile, slot, races);
       if (!race || !race.date) continue;
       list.push({ label: race.name, start: race.date, end: race.date, type: "race", personal: true, optional: !race.validated });
     }
@@ -667,12 +818,13 @@
 
     const races = getRaces(profile);
     for (const slot of raceSlots(profile)) {
-      const race = races[slot.id];
+      const race = raceForSlot(profile, slot, races);
       if (race && race.date) {
         const d = parseDate(race.date);
         steps.push({
           kind: "race", label: race.name, place: race.place || null, km: race.km,
-          validated: Boolean(race.validated),
+          validated: Boolean(race.validated), team: Boolean(race.team),
+          companions: race.companions || [], dateApprox: Boolean(race.dateApprox),
           start: d, end: d, ts: d.getTime(), slot, race, issues: raceIssues(slot, race)
         });
       } else {
@@ -738,6 +890,7 @@
 
   function stepMetaText(step) {
     const bits = [];
+    if (step.dateApprox) bits.push("date à préciser");
     if (typeof step.km === "number") bits.push(`${step.km} km`);
     if (step.place) bits.push(step.place);
     if (step.optional) bits.push("optionnel");
@@ -804,6 +957,16 @@
         body.appendChild(badge);
       }
 
+      /* Qui d'autre y va (depuis « Qui court où ? ») */
+      if (step.team) {
+        const who = document.createElement("span");
+        who.className = "steps-with";
+        who.textContent = step.companions.length
+          ? `🏃 avec ${step.companions.join(", ")}`
+          : "🏃 personne d'autre pour l'instant";
+        body.appendChild(who);
+      }
+
       const metaText = step.kind === "slot" ? slotRuleText(step.slot) : stepMetaText(step);
       if (metaText || step.issues.length) {
         const meta = document.createElement("span");
@@ -818,12 +981,22 @@
       const right = document.createElement("span");
       right.className = "steps-right";
       if (step.kind === "slot") {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "btn-ghost btn-ghost--sm";
-        btn.textContent = "Ajouter";
-        btn.addEventListener("click", () => openRaceDialog(step.slot, null));
-        right.appendChild(btn);
+        /* Le choix se fait dans « Qui court où ? » (liste validée par le staff) — si le profil
+           est relié à la team ; sinon la saisie locale reste disponible */
+        if (profile.participantId) {
+          const link = document.createElement("a");
+          link.className = "btn-ghost btn-ghost--sm";
+          link.href = teamBlocUrl(step.slot);
+          link.textContent = "Choisir";
+          right.appendChild(link);
+        } else {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "btn-ghost btn-ghost--sm";
+          btn.textContent = "Ajouter";
+          btn.addEventListener("click", () => openRaceDialog(step.slot, null));
+          right.appendChild(btn);
+        }
       } else {
         const jd = document.createElement("span");
         jd.className = "steps-jd";
@@ -831,7 +1004,14 @@
         else if (status === "now") jd.textContent = "J";
         else                       jd.textContent = `J-${daysDiff(now, step.start)}`;
         right.appendChild(jd);
-        if (step.slot) {
+        if (step.slot && step.team) {
+          const link = document.createElement("a");
+          link.className = "btn-ghost btn-ghost--sm";
+          link.href = teamBlocUrl(step.slot);
+          link.textContent = "Modifier";
+          link.setAttribute("aria-label", `Modifier ${step.label} dans Qui court où`);
+          right.appendChild(link);
+        } else if (step.slot) {
           const btn = document.createElement("button");
           btn.type = "button";
           btn.className = "btn-ghost btn-ghost--sm";
@@ -1086,18 +1266,47 @@
 
   /* ── View transitions ─────────────────────────────────────────────────── */
 
+  function renderLinkBox(profile) {
+    if (!linkTeamBox) return;
+    const show = !profile.participantId && ROSTER.length > 0;
+    linkTeamBox.classList.toggle("hidden", !show);
+    if (show) {
+      fillRosterSelect(linkParticipant, "— c'est moi —");
+      const guess = matchRoster(profile.firstName);
+      if (guess) linkParticipant.value = guess.id;
+    }
+  }
+
   function showTracker(profile) {
+    /* Profil d'avant la v3 : on le relie au roster si le prénom est sans ambiguïté */
+    if (!profile.participantId) {
+      const guess = matchRoster(profile.firstName);
+      if (guess && TEAM_TRACK[guess.group] === profile.track) profile = linkProfile(profile, guess.id);
+    } else {
+      setTeamMe(profile.participantId);
+    }
     onboardingCard.classList.add("hidden");
     trackerCard.classList.remove("hidden");
     calendarCard.classList.remove("hidden");
     currentProfile = profile;
     startCountdown(profile);
     if (stepsCard) stepsCard.classList.remove("hidden");
+    renderLinkBox(profile);
     renderSteps(profile);
     renderCalendar(profile);
+    /* Courses de « Qui court où ? » : cache d'abord (déjà rendu), puis réseau */
+    loadTeamChoices().then(() => {
+      if (currentProfile === profile) { renderSteps(profile); renderCalendar(profile); }
+    });
   }
 
   function showOnboarding() {
+    /* Identité déjà connue d'un autre outil (ou de l'ancien profil) → préremplie */
+    if (participantSel && ROSTER.length) {
+      const me = getTeamMe();
+      participantSel.value = me || "";
+      participantSel.dispatchEvent(new Event("change"));
+    }
     onboardingCard.classList.remove("hidden");
     trackerCard.classList.add("hidden");
     calendarCard.classList.add("hidden");
@@ -1113,12 +1322,16 @@
   onboardingForm.addEventListener("submit", function onSubmit(event) {
     event.preventDefault();
     const fd         = new FormData(onboardingForm);
-    const firstName  = String(fd.get("firstName") || "").trim();
+    const pid        = String(fd.get("participant") || "");
+    const person     = rosterById[pid] || null;
+    const firstName  = person ? person.name : String(fd.get("firstName") || "").trim();
     const track      = String(fd.get("track") || "");
     const utmbScenario = String(fd.get("utmbScenario") || "");
     if (!firstName || !safeTracks[track] || !safeUtmbScenarios[utmbScenario]) return;
     const profile = { firstName, track, utmbScenario };
+    if (person) profile.participantId = person.id;
     saveProfile(profile);
+    if (person) setTeamMe(person.id);
     showTracker(profile);
   });
 
@@ -1128,6 +1341,41 @@
   });
 
   /* ── Init ─────────────────────────────────────────────────────────────── */
+
+  /* Onboarding : sélecteur roster (le prénom libre reste dispo pour qui n'y est pas) */
+  if (participantSel) {
+    if (ROSTER.length) {
+      fillRosterSelect(participantSel, "— choisis ton prénom —");
+      participantSel.addEventListener("change", () => {
+        const p = rosterById[participantSel.value];
+        const other = participantSel.value === "__other";
+        if (firstNameField) firstNameField.classList.toggle("hidden", !other);
+        if (firstNameIn) firstNameIn.required = other;
+        if (p && trackSel && TEAM_TRACK[p.group]) trackSel.value = TEAM_TRACK[p.group];
+      });
+    } else {
+      /* Roster non chargé (offline) : on retombe sur le prénom libre */
+      participantSel.closest(".field").classList.add("hidden");
+      if (firstNameField) firstNameField.classList.remove("hidden");
+      if (firstNameIn) firstNameIn.required = true;
+    }
+  }
+
+  if (linkGoBtn) {
+    linkGoBtn.addEventListener("click", () => {
+      if (!currentProfile || !linkParticipant || !rosterById[linkParticipant.value]) return;
+      showTracker(linkProfile(currentProfile, linkParticipant.value));
+    });
+  }
+
+  /* Retour sur l'onglet : on rafraîchit les choix de la team */
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState !== "visible" || !currentProfile) return;
+    const profile = currentProfile;
+    loadTeamChoices().then(() => {
+      if (currentProfile === profile) { renderSteps(profile); renderCalendar(profile); }
+    });
+  });
 
   const saved = getSavedProfile();
   if (saved) { showTracker(saved); return; }

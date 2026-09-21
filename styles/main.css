@@ -912,6 +912,29 @@ select:focus {
 .steps-status--ok      { color: #6dd28a; }
 .steps-status--pending { color: var(--text-soft); }
 
+/* Qui d'autre y va (Qui court où ?) */
+.steps-with {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.78rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+.steps-right a.btn-ghost { text-decoration: none; display: inline-block; }
+
+/* Liaison du profil à la team */
+.link-team {
+  margin: 14px 0 6px;
+  padding: 12px 14px;
+  border: 1px dashed var(--border-hi, rgba(255,255,255,.18));
+  border-radius: 14px;
+  font-size: 0.85rem;
+  color: var(--text-soft);
+}
+.link-team p { margin: 0 0 8px; }
+.link-team-row { display: flex; gap: 8px; align-items: center; }
+.link-team-row select { flex: 1; min-width: 0; }
+
 /* Course envisagée, pas encore validée : liseré pointillé, nom en italique */
 .steps-item--pending::before {
   background: repeating-linear-gradient(180deg, #f5c518 0 4px, transparent 4px 7px);

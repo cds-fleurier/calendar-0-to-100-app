@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.0.0] - 2026-09-21
+- **Liaison avec la team.** L'onboarding propose le roster de la carte (« Qui es-tu ? »),
+  le parcours se règle tout seul ; identité partagée avec les autres outils via la clé
+  localStorage `team_me` (même origine). Les profils existants sont reliés automatiquement
+  quand le prénom est sans ambiguïté, sinon un encart « Relie ton profil » le propose.
+- **Courses depuis « Qui court où ? »** : les choix faits là-bas (Google Sheet) remplacent
+  la saisie locale dans les étapes et le calendrier — nom + département, distance, date
+  (samedi du week-end ou jour précis), validation staff, et **qui d'autre y va**.
+  Boutons « Choisir » / « Modifier » → renvoient vers le bloc concerné de Qui court où.
+  Cache localStorage des choix pour l'affichage hors ligne. La saisie locale ne sert plus
+  qu'aux profils non reliés (héritage).
+
 ## [2.9.0] - 2026-09-21
 - Barre d'onglets partagée de la team (hub `0to100-hub/nav.js`) : Calendrier · Carte · Qui court où · Séances, en bas d'écran.
 

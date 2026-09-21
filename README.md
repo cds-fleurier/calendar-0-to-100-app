@@ -9,7 +9,8 @@ Application web statique (HTML/CSS/JS vanilla), mobile-first, deployee sur GitHu
 
 ## Fonctionnalites V2.8.0
 - Carte Etapes : countdown live sur l'etape la plus proche (WE Choc, course perso ou course finale) + liste chronologique de toutes les etapes avec J-n.
-- Courses de preparation personnelles : 4 emplacements definis dans `RACE_SLOTS` (`scripts/config.js`) avec week-ends autorises (`windows`) et distance (`minKm` / `maxKm`). Saisie par le participant (dialog), stockee en `localStorage`, ecarts aux contraintes signales mais non bloquants. Case "Validee par le staff" : course envisagee (pointille) ou definitive.
+- Courses de preparation : 4 emplacements definis dans `RACE_SLOTS` (`scripts/config.js`) avec week-ends autorises (`windows`) et distance (`minKm` / `maxKm`). **Depuis la v3, les courses viennent de « Qui court où ? »** (Google Sheet lu via `TEAM_CHOICES_API`, courses autorisees chargees depuis `qui-court-ou-0to100/data/courses.js`) : nom, distance, date, validation staff, et qui d'autre y va. Les boutons Choisir / Modifier renvoient vers Qui court où. La saisie locale (dialog + `localStorage`) ne sert plus qu'aux profils non relies au roster.
+- Identite partagee entre les outils de la team : roster charge depuis `carte-participants-0to100/data/participants.js`, id du participant memorise dans le profil (`participantId`) et dans la cle localStorage commune `team_me` (`TEAM_ME_KEY`).
 - Evenements d'equipe dans `EVENTS` (`place` et `optional` facultatifs).
 
 ## Fonctionnalites V2.6.1

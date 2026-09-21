@@ -40,8 +40,14 @@
         <h2 id="onboarding-title">Première visite</h2>
         <form id="onboarding-form">
           <div class="field">
+            <label for="participant">Qui es-tu ?</label>
+            <select id="participant" name="participant">
+              <option value="">— choisis ton prénom —</option>
+            </select>
+          </div>
+          <div class="field hidden" id="first-name-field">
             <label for="first-name">Prénom</label>
-            <input id="first-name" name="firstName" type="text" maxlength="40" required placeholder="Ton prénom" />
+            <input id="first-name" name="firstName" type="text" maxlength="40" placeholder="Ton prénom" />
           </div>
           <div class="field">
             <label for="track">Parcours</label>
@@ -88,6 +94,13 @@
         <div class="profile-meta">
           <p id="welcome-line"></p>
           <p id="project-line"></p>
+        </div>
+        <div id="link-team" class="link-team hidden">
+          <p>Relie ton profil à la team pour voir tes courses de « Qui court où ? » ici :</p>
+          <div class="link-team-row">
+            <select id="link-participant"><option value="">— c'est moi —</option></select>
+            <button id="link-go" type="button" class="btn-ghost btn-ghost--sm">Relier</button>
+          </div>
         </div>
         <button id="reset-profile" type="button" class="btn-ghost">Modifier mon profil</button>
       </section>
@@ -191,6 +204,9 @@
 
     <div id="celebration-layer" class="celebration-layer hidden" aria-live="polite"></div>
 
+    <!-- Données partagées de la team : roster (carte) + courses autorisées (Qui court où) -->
+    <script src="https://cds-fleurier.github.io/carte-participants-0to100/data/participants.js"></script>
+    <script src="https://cds-fleurier.github.io/qui-court-ou-0to100/data/courses.js"></script>
     <script src="scripts/config.js"></script>
     <script src="scripts/app.js"></script>
     <!-- Barre d'onglets partagée de la team (hub) -->

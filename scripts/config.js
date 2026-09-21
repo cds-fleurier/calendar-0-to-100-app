@@ -1,4 +1,18 @@
-const APP_VERSION = "2.9.0";
+const APP_VERSION = "3.0.0";
+
+/*
+ * Liaison avec les autres outils de la team (même origine cds-fleurier.github.io,
+ * donc localStorage partagé) :
+ *   TEAM_ME_KEY       clé localStorage commune = id du participant (data/participants.js
+ *                     de la carte, chargé dans index.html)
+ *   TEAM_CHOICES_API  Web App Apps Script de « Qui court où ? » (lecture seule ici)
+ *   TEAM_APP_URL      où l'on envoie le participant pour choisir/modifier ses courses
+ *   SLOT_BLOCS        emplacement calendrier → bloc « Qui court où » (mêmes fenêtres)
+ */
+const TEAM_ME_KEY      = "team_me";
+const TEAM_CHOICES_API = "https://script.google.com/macros/s/AKfycbwS1c6LgGqqLaanrQvfPyprFUqocJZlvQG0sDPcZbSrqKRtCY8FmhBBWgBUd0diy5n3/exec";
+const TEAM_APP_URL     = "https://cds-fleurier.github.io/qui-court-ou-0to100/";
+const SLOT_BLOCS       = { race1: "noel", race2: "mars", race3: "juin", race4: "juillet" };
 
 /*
  * raceStart — départ de la course 2027, relatif au lundi de la semaine UTMB choisie.
