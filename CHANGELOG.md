@@ -1,5 +1,8 @@
 # Changelog
 
+## [3.1.1] - 2026-09-22
+- Le cache des choix Qui court où est lu avant le premier rendu (plus de bascule visible pendant l'appel réseau).
+
 ## [3.1.0] - 2026-09-22
 - Sur chaque course choisie : ligne 📝 inscriptions (ouverture datée avec J-n, déjà ouvertes, ou
   note) + lien « site ↗ » vers le site officiel — données du relevé Qui court où (`courses.js`).

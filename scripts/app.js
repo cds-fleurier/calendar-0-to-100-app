@@ -1360,6 +1360,9 @@
     startCountdown(profile);
     if (stepsCard) stepsCard.classList.remove("hidden");
     renderLinkBox(profile);
+    /* Cache des choix Qui court où lu AVANT le premier rendu : pas de bascule visible
+       entre saisies locales et courses de la team pendant l'appel réseau */
+    if (teamChoices === null) teamChoices = readTeamCache();
     renderSteps(profile);
     renderCalendar(profile);
     /* Courses de « Qui court où ? » : cache d'abord (déjà rendu), puis réseau */
