@@ -1,5 +1,9 @@
 # Changelog
 
+## [3.1.0] - 2026-09-22
+- Sur chaque course choisie : ligne 📝 inscriptions (ouverture datée avec J-n, déjà ouvertes, ou
+  note) + lien « site ↗ » vers le site officiel — données du relevé Qui court où (`courses.js`).
+
 ## [3.0.1] - 2026-09-21
 - Une course de la liste du staff est **validée d'office** (plus de « en attente ») ; seule une
   « autre course » attend la validation dans le Sheet. Une saisie manuelle dont le nom

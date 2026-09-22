@@ -344,7 +344,8 @@
       name: course.dept ? `${course.name} (${course.dept})` : course.name,
       date: course.date || course.weekend || (ws.length ? ws[0].from : null),
       km: typeof course.km === "number" ? course.km : null,
-      place: null, validated: true, team: true, bloc, companions
+      place: null, validated: true, team: true, bloc, companions,
+      url: course.url || null, signup: course.signup || null
     };
   }
 
@@ -365,6 +366,23 @@
     const local = localRaces[slot.id];
     if (!local) return null;
     return local.validated || !inStaffList(local.name) ? local : Object.assign({}, local, { validated: true });
+  }
+
+  /* Ligne « inscriptions » : ouverture datée (J-n), déjà ouvertes, ou note libre */
+  function signupText(race) {
+    const sg = race && race.signup;
+    if (!sg) return null;
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    if (sg.open) {
+      const d = parseDate(sg.open);
+      const days = Math.round((d - today) / 86400000);
+      const when = new Intl.DateTimeFormat("fr-FR", { weekday: "short", day: "numeric", month: "short" }).format(d);
+      if (days > 0)   return { cls: days <= 21 ? "soon" : "", text: `Inscriptions : ouverture ${when} · J-${days}` };
+      if (days === 0) return { cls: "soon", text: "Inscriptions : ouverture AUJOURD'HUI" };
+      return { cls: "open", text: `Inscriptions ouvertes depuis le ${when}` };
+    }
+    if (sg.status === "open") return { cls: "open", text: "Inscriptions ouvertes" };
+    return sg.note ? { cls: "", text: sg.note } : null;
   }
 
   function teamBlocUrl(slot) {
@@ -989,6 +1007,21 @@
         badge.className = `steps-status ${step.validated ? "steps-status--ok" : "steps-status--pending"}`;
         badge.textContent = step.validated ? "✓ Validée par le staff" : "⏳ En attente de validation";
         body.appendChild(badge);
+      }
+
+      /* Inscriptions (relevé Qui court où) + lien site officiel */
+      const sg = step.race && signupText(step.race);
+      if (sg) {
+        const line = document.createElement("span");
+        line.className = `steps-signup${sg.cls ? " steps-signup--" + sg.cls : ""}`;
+        line.textContent = `📝 ${sg.text}`;
+        if (step.race.url) {
+          line.appendChild(document.createTextNode(" · "));
+          const a = document.createElement("a");
+          a.href = step.race.url; a.target = "_blank"; a.rel = "noopener"; a.textContent = "site ↗";
+          line.appendChild(a);
+        }
+        body.appendChild(line);
       }
 
       /* Qui d'autre y va (depuis « Qui court où ? ») */

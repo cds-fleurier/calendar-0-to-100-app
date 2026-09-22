@@ -912,6 +912,12 @@ select:focus {
 .steps-status--ok      { color: #6dd28a; }
 .steps-status--pending { color: var(--text-soft); }
 
+/* Inscriptions (relevé Qui court où) */
+.steps-signup { display: block; margin-top: 3px; font-size: 0.74rem; color: var(--text-soft); line-height: 1.35; }
+.steps-signup--soon { color: #ffd79a; font-weight: 600; }
+.steps-signup--open { color: #bff5d6; font-weight: 600; }
+.steps-signup a { color: var(--accent); text-decoration: none; }
+
 /* Qui d'autre y va (Qui court où ?) */
 .steps-with {
   display: block;
