@@ -1,4 +1,4 @@
-const APP_VERSION = "3.1.1";
+const APP_VERSION = "3.1.2";
 
 /*
  * Liaison avec les autres outils de la team (même origine cds-fleurier.github.io,

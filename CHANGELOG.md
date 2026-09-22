@@ -1,5 +1,8 @@
 # Changelog
 
+## [3.1.2] - 2026-09-22
+- Relecture : une saisie manuelle n'est reconnue comme course de la liste qu'à partir de 8 caractères (« Trail » ne suffit plus) ; prise en compte de `signup.close`.
+
 ## [3.1.1] - 2026-09-22
 - Le cache des choix Qui court où est lu avant le premier rendu (plus de bascule visible pendant l'appel réseau).
 

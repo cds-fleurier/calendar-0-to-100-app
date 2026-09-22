@@ -352,7 +352,7 @@
   /* Une saisie manuelle dont le nom correspond à une course de la liste du staff est validée aussi */
   function inStaffList(name) {
     const n = normName(name);
-    if (n.length < 4) return false;
+    if (n.length < 8) return false;           /* « trail » ou « maxi » ne suffisent pas */
     return COURSES_LIST.some((c) => {
       const cn = normName(c.name);
       return cn === n || cn.includes(n) || n.includes(cn);
@@ -373,13 +373,15 @@
     const sg = race && race.signup;
     if (!sg) return null;
     const today = new Date(); today.setHours(0, 0, 0, 0);
+    const fmt = (d) => new Intl.DateTimeFormat("fr-FR", { weekday: "short", day: "numeric", month: "short" }).format(d);
+    if (sg.close && parseDate(sg.close) < today) return { cls: "", text: `Inscriptions closes depuis le ${fmt(parseDate(sg.close))}` };
     if (sg.open) {
       const d = parseDate(sg.open);
       const days = Math.round((d - today) / 86400000);
-      const when = new Intl.DateTimeFormat("fr-FR", { weekday: "short", day: "numeric", month: "short" }).format(d);
+      const when = fmt(d);
       if (days > 0)   return { cls: days <= 21 ? "soon" : "", text: `Inscriptions : ouverture ${when} · J-${days}` };
       if (days === 0) return { cls: "soon", text: "Inscriptions : ouverture AUJOURD'HUI" };
-      return { cls: "open", text: `Inscriptions ouvertes depuis le ${when}` };
+      return { cls: "open", text: `Inscriptions ouvertes depuis le ${when}${sg.close ? ` (jusqu'au ${fmt(parseDate(sg.close))})` : ""}` };
     }
     if (sg.status === "open") return { cls: "open", text: "Inscriptions ouvertes" };
     return sg.note ? { cls: "", text: sg.note } : null;
