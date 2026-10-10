@@ -418,6 +418,8 @@
   const SYNC_DEBOUNCE_MS = 2000;
   let syncTimer = null;
   let syncInFlight = false;
+  const PULL_MIN_INTERVAL_MS = 30000;
+  let lastPullAt = 0;
 
   function syncApi() { return typeof TEAM_CHOICES_API === "string" ? TEAM_CHOICES_API : ""; }
   function syncId(profile) { return profile && profile.participantId ? profile.participantId : ""; }
@@ -462,6 +464,7 @@
       /* Pas de Content-Type → pas de preflight CORS (Apps Script ne gère pas OPTIONS) */
       const res = await fetch(syncApi(), {
         method: "POST",
+        keepalive: true, /* la requête aboutit même si l'onglet est fermé / l'appli mise en arrière-plan */
         body: JSON.stringify({ type: "cal", participant: syncId(profile), track: profile.track, scenario: profile.utmbScenario, set: sent })
       });
       const data = await res.json();
@@ -489,8 +492,10 @@
     if (JSON.stringify(merged) !== before && currentProfile === profile) renderCalendar(profile);
   }
 
-  async function pullDone(profile) {
+  async function pullDone(profile, { throttle = false } = {}) {
     if (!syncApi() || !syncId(profile)) return;
+    if (throttle && Date.now() - lastPullAt < PULL_MIN_INTERVAL_MS) return;
+    lastPullAt = Date.now();
     try {
       const res = await fetch(`${syncApi()}?cal=${encodeURIComponent(syncId(profile))}`, { cache: "no-store" });
       const data = await res.json();
@@ -1581,15 +1586,18 @@
     });
   }
 
-  /* Retour sur l'onglet : on rafraîchit les choix de la team */
+  /* Retour sur l'onglet : on rafraîchit les choix de la team (au plus toutes les 30 s) */
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState !== "visible" || !currentProfile) return;
+    if (Date.now() - lastPullAt < PULL_MIN_INTERVAL_MS) return;
     const profile = currentProfile;
     loadTeamChoices().then(() => {
       if (currentProfile === profile) { renderSteps(profile); renderCalendar(profile); }
     });
-    pullDone(profile);
+    pullDone(profile, { throttle: true });
   });
+  /* Retour du réseau : on envoie ce qui attendait */
+  window.addEventListener("online", () => { if (currentProfile) pushDone(currentProfile); });
   /* On quitte l'onglet : on n'attend pas la fin du délai pour envoyer */
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden" && currentProfile) { clearTimeout(syncTimer); pushDone(currentProfile); }

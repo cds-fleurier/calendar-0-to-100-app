@@ -1,5 +1,10 @@
 # Changelog
 
+## [3.2.1] - 2026-10-10
+- Synchro plus robuste sur mobile : l'envoi des cases utilise `keepalive` (aboutit même si l'onglet est fermé ou l'appli passée en arrière-plan).
+- Relance automatique de l'envoi au retour du réseau (événement `online`).
+- Retour sur l'onglet : relecture du Sheet (choix team + cases) au plus toutes les 30 s, au lieu de 2 appels Apps Script à chaque bascule d'appli.
+
 ## [3.2.0] - 2026-10-10
 - **Synchro des jours cochés entre appareils** : les cases sont enregistrées dans le Google Sheet de « Qui court où ? » (onglet `calendrier`, une ligne par participant × parcours × scénario UTMB). Identité = celle de la team (`participantId` / `team_me`), sans email ni code.
   - Le `localStorage` reste la copie de travail : affichage immédiat, fonctionne hors ligne. Les changements sont mis en attente puis envoyés en lot (2 s après le dernier clic, ou en quittant l'onglet) ; le serveur ne modifie que les jours envoyés → deux appareils ne s'écrasent pas.
