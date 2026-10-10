@@ -1,11 +1,12 @@
-const APP_VERSION = "3.1.2";
+const APP_VERSION = "3.2.0";
 
 /*
  * Liaison avec les autres outils de la team (même origine cds-fleurier.github.io,
  * donc localStorage partagé) :
  *   TEAM_ME_KEY       clé localStorage commune = id du participant (data/participants.js
  *                     de la carte, chargé dans index.html)
- *   TEAM_CHOICES_API  Web App Apps Script de « Qui court où ? » (lecture seule ici)
+ *   TEAM_CHOICES_API  Web App Apps Script de « Qui court où ? » : lecture des courses, et
+ *                     synchro des jours cochés entre appareils (onglet `calendrier`, v3.2.0)
  *   TEAM_APP_URL      où l'on envoie le participant pour choisir/modifier ses courses
  *   SLOT_BLOCS        emplacement calendrier → bloc « Qui court où » (mêmes fenêtres)
  */

@@ -9,7 +9,7 @@ Application web statique (HTML/CSS/JS vanilla), mobile-first, deployee sur GitHu
 
 ## Fonctionnalites V2.8.0
 - Carte Etapes : countdown live sur l'etape la plus proche (WE Choc, course perso ou course finale) + liste chronologique de toutes les etapes avec J-n.
-- Courses de preparation : 4 emplacements definis dans `RACE_SLOTS` (`scripts/config.js`) avec week-ends autorises (`windows`) et distance (`minKm` / `maxKm`). **Depuis la v3, les courses viennent de « Qui court où ? »** (Google Sheet lu via `TEAM_CHOICES_API`, courses autorisees chargees depuis `qui-court-ou-0to100/data/courses.js`) : nom, distance, date, validation staff, et qui d'autre y va. Les boutons Choisir / Modifier renvoient vers Qui court où. La saisie manuelle (dialog + `localStorage`, bouton « saisir ») reste possible pour tout le monde ; le choix Qui court où prend le dessus s'il existe.
+- Courses de preparation : 4 emplacements definis dans `RACE_SLOTS` (`scripts/config.js`) avec week-ends autorises (`windows`) et distance (`minKm` / `maxKm`). **Depuis la v3, les courses viennent de « Qui court où ? »** (Google Sheet lu via `TEAM_CHOICES_API`, courses autorisees chargees depuis `qui-court-ou-0to100/data/courses.js`) : nom, distance, date, validation staff, et qui d'autre y va. Les boutons Choisir / Modifier renvoient vers Qui court où. Depuis la v3.2.0, un profil relie a la team ne peut plus saisir de course a la main (bouton « saisir » retire) : une ancienne saisie locale reste affichee avec un lien « Declarer ». La saisie manuelle ne reste que pour un profil non relie.
 - Identite partagee entre les outils de la team : roster charge depuis `carte-participants-0to100/data/participants.js`, id du participant memorise dans le profil (`participantId`) et dans la cle localStorage commune `team_me` (`TEAM_ME_KEY`). Pas dans le trombi → id invite `guest|<100|40>|<Prenom>`, meme convention que Qui court ou.
 - Evenements d'equipe dans `EVENTS` (`place` et `optional` facultatifs).
 
@@ -39,7 +39,8 @@ un fichier `"provisional": true` n'affiche pas de distance du tout.
 - Stockage local du profil via cookie.
 - Compteur de dodos restants jusqu'a la course.
 - Calendrier journalier avec case a cocher "entrainement du jour fait".
-- Persistance des cases cochees via `localStorage`.
+- Persistance des cases cochees : `localStorage` (copie de travail, hors ligne) **synchronise entre appareils depuis la v3.2.0** via le Google Sheet de Qui court ou (onglet `calendrier`, `GET ?cal=` / `POST {type:"cal"}` sur `TEAM_CHOICES_API`, changements envoyes en lot et fusionnes jour par jour cote serveur). Voir `qui-court-ou-0to100/backend/README.md`.
+- Cache-busting : `?v=<APP_VERSION>` sur les CSS/JS locaux dans `index.html`, a bumper a chaque version.
 - Barre de progression globale des entrainements coches.
 - Calendrier mensuel en accordions avec grille de 7 jours et mois courant ouvert par defaut.
 

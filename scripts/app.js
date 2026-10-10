@@ -20,6 +20,7 @@
   const calendarCard   = document.getElementById("calendar-card");
   const onboardingForm = document.getElementById("onboarding-form");
   const resetButton    = document.getElementById("reset-profile");
+  const syncStatusEl   = document.getElementById("sync-status");
   const welcomeLine    = document.getElementById("welcome-line");
   const projectLine    = document.getElementById("project-line");
   const dodosValue     = document.getElementById("dodos-value");
@@ -407,6 +408,118 @@
 
   function setDoneDays(profile, doneDays) {
     localStorage.setItem(doneStorageKey(profile), JSON.stringify(doneDays));
+  }
+
+  /* ── Synchro des jours cochés entre appareils (Sheet de « Qui court où ? ») ──
+     Le localStorage reste la copie de travail (affichage immédiat, hors ligne). Chaque
+     changement est mis en attente (`pending`) puis envoyé en lot ; le serveur ne modifie que
+     les jours envoyés, deux appareils ne s'écrasent donc pas. Au premier passage, les jours
+     déjà cochés sur cet appareil sont envoyés une fois (migration). */
+  const SYNC_DEBOUNCE_MS = 2000;
+  let syncTimer = null;
+  let syncInFlight = false;
+
+  function syncApi() { return typeof TEAM_CHOICES_API === "string" ? TEAM_CHOICES_API : ""; }
+  function syncId(profile) { return profile && profile.participantId ? profile.participantId : ""; }
+  function pendingKey(profile) { return `${DONE_KEY_PREFIX}_pending_${profile.track}_${profile.utmbScenario}_${syncId(profile)}`; }
+  function migratedKey(profile) { return `${DONE_KEY_PREFIX}_synced_${profile.track}_${profile.utmbScenario}_${syncId(profile)}`; }
+
+  function readJson(key, fallback) {
+    try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; } catch { return fallback; }
+  }
+  function writeJson(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* plein */ }
+  }
+
+  function setSyncStatus(text, warn) {
+    if (!syncStatusEl) return;
+    syncStatusEl.textContent = text || "";
+    syncStatusEl.classList.toggle("hidden", !text);
+    syncStatusEl.classList.toggle("sync-status--warn", Boolean(warn));
+  }
+
+  function syncLabel(at) {
+    const hm = new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit" }).format(at);
+    return `☁️ Cases synchronisées entre tes appareils · ${hm}`;
+  }
+
+  /* Un jour coché/décoché : enregistré localement, puis envoyé (regroupé) */
+  function queueDoneChange(profile, dayKey, value) {
+    if (!syncApi() || !syncId(profile)) return;
+    const pending = readJson(pendingKey(profile), {});
+    pending[dayKey] = value;
+    writeJson(pendingKey(profile), pending);
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(() => pushDone(profile), SYNC_DEBOUNCE_MS);
+  }
+
+  async function pushDone(profile) {
+    if (syncInFlight) { syncTimer = setTimeout(() => pushDone(profile), SYNC_DEBOUNCE_MS); return; }
+    const sent = readJson(pendingKey(profile), {});
+    if (!Object.keys(sent).length) return;
+    syncInFlight = true;
+    try {
+      /* Pas de Content-Type → pas de preflight CORS (Apps Script ne gère pas OPTIONS) */
+      const res = await fetch(syncApi(), {
+        method: "POST",
+        body: JSON.stringify({ type: "cal", participant: syncId(profile), track: profile.track, scenario: profile.utmbScenario, set: sent })
+      });
+      const data = await res.json();
+      if (!data || !data.ok) throw new Error((data && data.error) || "réponse invalide");
+      /* On retire de l'attente ce qui est parti (sauf si l'utilisateur a re-changé ce jour entre-temps) */
+      const pending = readJson(pendingKey(profile), {});
+      for (const k of Object.keys(sent)) if (pending[k] === sent[k]) delete pending[k];
+      writeJson(pendingKey(profile), pending);
+      writeJson(migratedKey(profile), true);
+      applyServerDone(profile, data.done || {});
+      setSyncStatus(syncLabel(new Date()));
+    } catch (err) {
+      console.warn("Synchro calendrier : envoi impossible, on réessaiera", err);
+      setSyncStatus("⏳ Hors ligne : tes cases sont gardées ici et seront synchronisées plus tard", true);
+    } finally {
+      syncInFlight = false;
+    }
+  }
+
+  /* État serveur + changements encore en attente = ce qu'on affiche */
+  function applyServerDone(profile, serverDone) {
+    const merged = Object.assign({}, serverDone, readJson(pendingKey(profile), {}));
+    const before = JSON.stringify(getDoneDays(profile));
+    setDoneDays(profile, merged);
+    if (JSON.stringify(merged) !== before && currentProfile === profile) renderCalendar(profile);
+  }
+
+  async function pullDone(profile) {
+    if (!syncApi() || !syncId(profile)) return;
+    try {
+      const res = await fetch(`${syncApi()}?cal=${encodeURIComponent(syncId(profile))}`, { cache: "no-store" });
+      const data = await res.json();
+      if (!data || !data.ok || !Array.isArray(data.cal)) throw new Error((data && data.error) || "réponse invalide");
+      const row = data.cal.find((r) => r.track === profile.track && r.scenario === profile.utmbScenario);
+      if (!row && !readJson(migratedKey(profile), false)) {
+        /* Premier passage : on envoie ce qui est déjà coché sur cet appareil */
+        const local = getDoneDays(profile);
+        if (Object.keys(local).length) {
+          writeJson(pendingKey(profile), Object.assign({}, local, readJson(pendingKey(profile), {})));
+          await pushDone(profile);
+          return;
+        }
+      }
+      if (row && !readJson(migratedKey(profile), false)) {
+        /* Cet appareil n'a jamais été synchronisé mais un autre l'a été : on garde l'union des
+           jours cochés (une séance faite ne se perd pas), le serveur l'emporte pour le reste */
+        const local = getDoneDays(profile), server = row.done || {}, pending = readJson(pendingKey(profile), {});
+        for (const k of Object.keys(local)) if (local[k] === true && server[k] !== true) pending[k] = true;
+        writeJson(pendingKey(profile), pending);
+      }
+      if (row) applyServerDone(profile, row.done || {});
+      writeJson(migratedKey(profile), true);
+      if (Object.keys(readJson(pendingKey(profile), {})).length) await pushDone(profile);
+      else setSyncStatus(syncLabel(new Date()));
+    } catch (err) {
+      console.warn("Synchro calendrier : lecture impossible, on garde la copie locale", err);
+      setSyncStatus("⏳ Hors ligne : affichage des cases enregistrées sur cet appareil", true);
+    }
   }
 
   function own(obj, key) {
@@ -1059,14 +1172,16 @@
           link.textContent = "Choisir";
           right.appendChild(link);
         }
-        /* Saisie manuelle toujours possible : le calendrier marche aussi tout seul */
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "btn-ghost btn-ghost--sm btn-ghost--quiet";
-        btn.textContent = profile.participantId ? "saisir" : "Ajouter";
-        btn.title = "Saisir une course à la main (sans passer par Qui court où)";
-        btn.addEventListener("click", () => openRaceDialog(step.slot, null));
-        right.appendChild(btn);
+        /* v3.2.0 : les courses se choisissent uniquement dans « Qui court où ? ». La saisie
+           locale ne reste que pour un profil pas relié à la team (roster non chargé). */
+        if (!profile.participantId) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "btn-ghost btn-ghost--sm";
+          btn.textContent = "Ajouter";
+          btn.addEventListener("click", () => openRaceDialog(step.slot, null));
+          right.appendChild(btn);
+        }
       } else {
         const jd = document.createElement("span");
         jd.className = "steps-jd";
@@ -1080,6 +1195,15 @@
           link.href = teamBlocUrl(step.slot);
           link.textContent = "Modifier";
           link.setAttribute("aria-label", `Modifier ${step.label} dans Qui court où`);
+          right.appendChild(link);
+        } else if (step.slot && profile.participantId) {
+          /* Ancienne saisie locale : à déclarer dans « Qui court où ? » (elle s'efface d'elle-même
+             à l'affichage dès qu'un choix y existe pour ce bloc) */
+          const link = document.createElement("a");
+          link.className = "btn-ghost btn-ghost--sm";
+          link.href = teamBlocUrl(step.slot);
+          link.textContent = "Déclarer";
+          link.title = "Course saisie sur cet appareil seulement : déclare-la dans Qui court où pour que la team la voie";
           right.appendChild(link);
         } else if (step.slot) {
           const btn = document.createElement("button");
@@ -1308,6 +1432,7 @@
           const wasChecked = isChecked(profile, doneDays, day);
           doneDays[dayKey] = checkbox.checked;
           setDoneDays(profile, doneDays);
+          queueDoneChange(profile, dayKey, checkbox.checked);
           if (!wasChecked && checkbox.checked) showCelebration();
           renderCalendar(profile);
         });
@@ -1371,6 +1496,9 @@
     loadTeamChoices().then(() => {
       if (currentProfile === profile) { renderSteps(profile); renderCalendar(profile); }
     });
+    /* Jours cochés : copie locale déjà affichée, puis état synchronisé */
+    setSyncStatus("");
+    pullDone(profile);
   }
 
   function showOnboarding() {
@@ -1460,6 +1588,11 @@
     loadTeamChoices().then(() => {
       if (currentProfile === profile) { renderSteps(profile); renderCalendar(profile); }
     });
+    pullDone(profile);
+  });
+  /* On quitte l'onglet : on n'attend pas la fin du délai pour envoyer */
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden" && currentProfile) { clearTimeout(syncTimer); pushDone(currentProfile); }
   });
 
   const saved = getSavedProfile();

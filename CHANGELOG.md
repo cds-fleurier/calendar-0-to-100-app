@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.2.0] - 2026-10-10
+- **Synchro des jours cochés entre appareils** : les cases sont enregistrées dans le Google Sheet de « Qui court où ? » (onglet `calendrier`, une ligne par participant × parcours × scénario UTMB). Identité = celle de la team (`participantId` / `team_me`), sans email ni code.
+  - Le `localStorage` reste la copie de travail : affichage immédiat, fonctionne hors ligne. Les changements sont mis en attente puis envoyés en lot (2 s après le dernier clic, ou en quittant l'onglet) ; le serveur ne modifie que les jours envoyés → deux appareils ne s'écrasent pas.
+  - Premier passage : les jours déjà cochés sur l'appareil sont envoyés (migration) ; un 2e appareil jamais synchronisé ajoute ses jours cochés (union, une séance faite ne se perd pas).
+  - Ligne d'état sous le profil : « ☁️ Cases synchronisées entre tes appareils · hh:mm » ou « ⏳ Hors ligne… ».
+  - Règle aussi la purge Safari (ITP) du localStorage après 7 jours sans visite.
+- **Courses : uniquement via « Qui court où ? »** pour les profils reliés à la team — le bouton « saisir » disparaît ; une ancienne saisie locale reste affichée avec un lien « Déclarer ». La saisie locale ne reste que pour un profil non relié (roster indisponible).
+- Cache-busting `?v=` sur `styles/main.css`, `scripts/config.js`, `scripts/app.js` (à bumper avec `APP_VERSION`).
+
 ## [3.1.2] - 2026-09-22
 - Relecture : une saisie manuelle n'est reconnue comme course de la liste qu'à partir de 8 caractères (« Trail » ne suffit plus) ; prise en compte de `signup.close`.
 

@@ -1246,3 +1246,7 @@ input[type="date"] {
   .steps-label { font-size: 0.82rem; }
   .field-row { grid-template-columns: 1fr; gap: 0; }
 }
+
+/* Synchro des jours cochés entre appareils (v3.2.0) */
+.sync-status { margin: 10px 0 0; font-size: 0.72rem; color: var(--text-soft); }
+.sync-status--warn { color: #ffd79a; }
