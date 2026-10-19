@@ -1,5 +1,8 @@
 # Changelog
 
+## [3.3.0] - 2026-10-19
+- **Invité → vraie fiche automatique** : un profil invité (`guest|<100|40>|<Prénom>`) est relié tout seul à la fiche du trombinoscope dès qu'elle existe (même groupe + même prénom exact, casse et accents ignorés ; pas de rapprochement sur le premier mot). Le prénom du profil est conservé → les cases cochées sur l'appareil restent et sont renvoyées sous le vrai id. Cas d'origine : Jérémy, inscrit en invité avant son ajout à la carte.
+
 ## [3.2.1] - 2026-10-10
 - Synchro plus robuste sur mobile : l'envoi des cases utilise `keepalive` (aboutit même si l'onglet est fermé ou l'appli passée en arrière-plan).
 - Relance automatique de l'envoi au retour du réseau (événement `online`).

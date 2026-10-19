@@ -242,6 +242,15 @@
     return first.length === 1 ? first[0] : null;
   }
 
+  /* Invité ajouté depuis au trombinoscope : même groupe + même prénom exact (casse et accents
+     ignorés) → son vrai id. Même règle que Qui court où (pas de rapprochement sur le premier mot). */
+  function rosterMatchForGuest(id) {
+    const g = guestFromId(id);
+    if (!g) return null;
+    const exact = ROSTER.filter((p) => p.group === g.group && normName(p.name) === normName(g.name));
+    return exact.length === 1 ? exact[0] : null;
+  }
+
   function fillRosterSelect(select, placeholder) {
     if (!select) return;
     select.innerHTML = "";
@@ -1483,7 +1492,9 @@
       const guess = matchRoster(profile.firstName);
       if (guess && TEAM_TRACK[guess.group] === profile.track) profile = linkProfile(profile, guess.id);
     } else {
-      setTeamMe(profile.participantId);
+      const upgraded = rosterMatchForGuest(profile.participantId);
+      if (upgraded) profile = linkProfile(profile, upgraded.id); /* garde firstName → cases locales conservées, renvoyées sous le vrai id */
+      else setTeamMe(profile.participantId);
     }
     onboardingCard.classList.add("hidden");
     trackerCard.classList.remove("hidden");
