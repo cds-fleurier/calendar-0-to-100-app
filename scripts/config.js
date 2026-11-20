@@ -1,4 +1,4 @@
-const APP_VERSION = "3.3.0";
+const APP_VERSION = "3.4.0";
 
 /*
  * Liaison avec les autres outils de la team (même origine cds-fleurier.github.io,
@@ -16,8 +16,14 @@ const TEAM_APP_URL     = "https://cds-fleurier.github.io/qui-court-ou-0to100/";
 const SLOT_BLOCS       = { race1: "noel", race2: "mars", race3: "juin", race4: "juillet" };
 
 /*
- * raceStart — départ de la course 2027, relatif au lundi de la semaine UTMB choisie.
- * dayOffset : 0 = lundi, 4 = vendredi. `route` pointe vers assets/routes/<route>.json
+ * raceStart — départ de la course 2027.
+ *   date      : date officielle fixe (AAAA-MM-JJ) — prioritaire, indépendante de la semaine choisie
+ *   dayOffset : sinon, relatif au lundi de la semaine UTMB choisie (0 = lundi, 4 = vendredi).
+ *   dateEnd   : si la date exacte n'est pas encore connue, dernier jour possible (le compte à
+ *               rebours vise alors le premier jour possible, `date`).
+ * CCC 2027 : date officielle annoncée le 20/11/2026 = mercredi 25 août 2027 (heure non confirmée,
+ * on garde 09h00 comme en 2026).
+ * MCC 2027 : dimanche 22, lundi 23 ou mardi 24 août 2027 (20/11/2026), date exacte à venir. `route` pointe vers assets/routes/<route>.json
  * (tracé affiché sur la carte).
  * Horaires confirmés par les métadonnées des GPX officiels 2026 :
  *   CCC vendredi 09h00 (startdate 2026-08-28T09:00:05+02:00)
@@ -30,6 +36,7 @@ const TRACKS = {
     race: "CCC",
     startDate: "2026-03-02",
     raceStart: {
+      date: "2027-08-25",
       dayOffset: 4,
       time: "09:00",
       utcOffset: "+02:00",
@@ -42,6 +49,8 @@ const TRACKS = {
     race: "MCC",
     startDate: "2026-04-01",
     raceStart: {
+      date: "2027-08-22",
+      dateEnd: "2027-08-24",
       dayOffset: 0,
       time: "10:00",
       utcOffset: "+02:00",
@@ -131,15 +140,18 @@ const RACE_SLOTS = {
   ]
 };
 
+/*
+ * Semaine UTMB 2027 : fixée le 20/11/2026 (CCC mer. 25 août, MCC 22-24 août).
+ * L'ancien choix « 30 août – 5 sept. » (week2) n'existe plus : la clé est gardée comme alias
+ * de la semaine officielle pour ne pas perdre les cases cochées / la synchro (clés de stockage
+ * et lignes du Sheet contiennent le scénario).
+ */
+const UTMB_OFFICIAL = {
+  label: "22 août 2027 au 29 août 2027",
+  weekStart: "2027-08-23",
+  targetDate: "2027-08-29"
+};
 const UTMB_SCENARIOS = {
-  week1: {
-    label: "23 août 2027 au 29 août 2027",
-    weekStart: "2027-08-23",
-    targetDate: "2027-08-29"
-  },
-  week2: {
-    label: "30 août 2027 au 5 sept. 2027",
-    weekStart: "2027-08-30",
-    targetDate: "2027-09-05"
-  }
+  week1: UTMB_OFFICIAL,
+  week2: UTMB_OFFICIAL
 };

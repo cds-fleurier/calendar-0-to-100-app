@@ -16,7 +16,8 @@ Application web statique (HTML/CSS/JS vanilla), mobile-first, deployee sur GitHu
 ## Fonctionnalites V2.6.1
 - Countdown live vers la course 2027 du parcours (CCC Courmayeur / MCC Martigny-Combe).
 - Carte Leaflet interactive : trace officiel de la course, marqueurs depart/arrivee et points de controle.
-- Date de depart derivee de la semaine UTMB choisie (`raceStart.dayOffset` dans `scripts/config.js`).
+- Date de depart : `raceStart.date` (date officielle fixe) dans `scripts/config.js`, sinon derivee de la semaine UTMB (`dayOffset`). `raceStart.dateEnd` = date pas encore tranchee (fourchette, compte a rebours sur le premier jour possible).
+- 2027 (20/11/2026) : CCC mer. 25 aout ; MCC dim. 22, lun. 23 ou mar. 24 aout (a preciser) ; semaine UTMB unique 22-29 aout, plus de choix a l'inscription (`week2` = alias, donnees conservees).
 
 ## Traces de course
 Les traces vivent dans `assets/routes/<slug>.json` et sont referencees par `raceStart.route`.

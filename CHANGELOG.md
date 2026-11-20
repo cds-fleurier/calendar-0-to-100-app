@@ -1,5 +1,10 @@
 # Changelog
 
+## [3.4.0] - 2026-11-20
+- **Date officielle de la CCC 2027 : mercredi 25 août 2027** (annoncée le 20/11/2026). Compte à rebours, dodos et étape finale calés dessus. Heure non encore confirmée : 9h00 comme en 2026. Nouveau champ `raceStart.date` (date fixe, prioritaire sur `dayOffset`).
+- **MCC 2027 : dimanche 22, lundi 23 ou mardi 24 août**, date exacte à venir. Affichage « dimanche 22, lundi 23 ou mardi 24 août (date exacte à venir) », étape finale « 22–24 août 2027 », compte à rebours et dodos sur le premier jour possible (champ `raceStart.dateEnd`).
+- **Plus de choix de semaine UTMB** à l'inscription (champ caché, `week1`). L'ancien scénario « 30 août – 5 sept. » (`week2`) devient un alias de la semaine officielle (22–29 août) : les cases cochées et la synchro de ceux qui l'avaient choisi sont conservées (le scénario fait partie des clés de stockage et des lignes du Sheet).
+
 ## [3.3.0] - 2026-10-19
 - **Invité → vraie fiche automatique** : un profil invité (`guest|<100|40>|<Prénom>`) est relié tout seul à la fiche du trombinoscope dès qu'elle existe (même groupe + même prénom exact, casse et accents ignorés ; pas de rapprochement sur le premier mot). Le prénom du profil est conservé → les cases cochées sur l'appareil restent et sont renvoyées sous le vrai id. Cas d'origine : Jérémy, inscrit en invité avant son ajout à la carte.
 

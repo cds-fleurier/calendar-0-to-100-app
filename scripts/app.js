@@ -1,14 +1,14 @@
 (function runApp() {
   const safeAppVersion = typeof APP_VERSION === "string" ? APP_VERSION : "1.0.0";
-  const FALLBACK_CCC = { dayOffset: 4, time: "09:00", utcOffset: "+02:00", place: "Courmayeur",     route: "ccc" };
-  const FALLBACK_MCC = { dayOffset: 0, time: "10:00", utcOffset: "+02:00", place: "Martigny-Combe", route: "mcc" };
+  const FALLBACK_CCC = { date: "2027-08-25", dayOffset: 4, time: "09:00", utcOffset: "+02:00", place: "Courmayeur",     route: "ccc" };
+  const FALLBACK_MCC = { date: "2027-08-22", dateEnd: "2027-08-24", dayOffset: 0, time: "10:00", utcOffset: "+02:00", place: "Martigny-Combe", route: "mcc" };
   const safeTracks = typeof TRACKS === "object" && TRACKS ? TRACKS : {
     "0to100": { label: "0 to 100", race: "CCC", startDate: "2026-03-02", raceStart: FALLBACK_CCC },
     "0to40":  { label: "0 to 40",  race: "MCC", startDate: "2026-04-06", raceStart: FALLBACK_MCC }
   };
   const safeUtmbScenarios = typeof UTMB_SCENARIOS === "object" && UTMB_SCENARIOS ? UTMB_SCENARIOS : {
-    week1: { label: "23 août 2027 au 29 août 2027",     weekStart: "2027-08-23", targetDate: "2027-08-29" },
-    week2: { label: "30 août 2027 au 5 septembre 2027", weekStart: "2027-08-30", targetDate: "2027-09-05" }
+    week1: { label: "22 août 2027 au 29 août 2027", weekStart: "2027-08-23", targetDate: "2027-08-29" },
+    week2: { label: "22 août 2027 au 29 août 2027", weekStart: "2027-08-23", targetDate: "2027-08-29" }
   };
 
   const RING_CIRC     = 326.73; /* 2π × 52 */
@@ -667,7 +667,7 @@
     return String(n).padStart(2, "0");
   }
 
-  /* Date/heure de départ = lundi de la semaine UTMB + dayOffset, à l'heure locale course */
+  /* Date/heure de départ = date officielle si connue, sinon lundi de la semaine UTMB + dayOffset */
   function raceStartInfo(profile) {
     const track    = safeTracks[profile.track];
     const scenario = safeUtmbScenarios[profile.utmbScenario];
@@ -675,27 +675,45 @@
 
     const rs      = track.raceStart;
     const weekRef = scenario.weekStart || scenario.targetDate;
-    const day     = parseDate(weekRef);
-    day.setDate(day.getDate() + (rs.dayOffset || 0));
+    const day     = parseDate(rs.date || weekRef);
+    if (!rs.date) day.setDate(day.getDate() + (rs.dayOffset || 0));
 
     return {
       race:  track.race,
       route: rs.route,
       place: rs.place,
       date:  day,
+      dateEnd: rs.date && rs.dateEnd ? parseDate(rs.dateEnd) : null,
       time:  rs.time,
       ts:    new Date(`${toDayKey(day)}T${rs.time}:00${rs.utcOffset}`).getTime()
     };
   }
 
+  /* "dimanche 22, lundi 23 ou mardi 24 août" */
+  function possibleDaysText(from, to) {
+    const days = [];
+    const d = new Date(from);
+    while (d <= to && days.length < 10) { days.push(new Date(d)); d.setDate(d.getDate() + 1); }
+    const fmt = (x) => new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric" }).format(x);
+    const month = new Intl.DateTimeFormat("fr-FR", { month: "long" }).format(to);
+    const parts = days.map(fmt);
+    const last = parts.pop();
+    return (parts.length ? `${parts.join(", ")} ou ${last}` : last) + ` ${month}`;
+  }
+
   function renderCountdownHead(info) {
     if (countdownTitle) countdownTitle.textContent = `${info.race} UTMB 2027`;
     if (countdownSub) {
-      const when = new Intl.DateTimeFormat("fr-FR", {
-        weekday: "long", day: "numeric", month: "long"
-      }).format(info.date);
-      countdownSub.textContent =
-        `Départ ${info.place} · ${when}, ${info.time.replace(":", "h")}`;
+      if (info.dateEnd) {
+        countdownSub.textContent =
+          `Départ ${info.place} · ${possibleDaysText(info.date, info.dateEnd)} (date exacte à venir) · compte à rebours sur le premier jour possible`;
+      } else {
+        const when = new Intl.DateTimeFormat("fr-FR", {
+          weekday: "long", day: "numeric", month: "long"
+        }).format(info.date);
+        countdownSub.textContent =
+          `Départ ${info.place} · ${when}, ${info.time.replace(":", "h")}`;
+      }
     }
   }
 
@@ -1019,7 +1037,7 @@
     if (info && !Number.isNaN(info.ts)) {
       steps.push({
         kind: "final", label: `${info.race} UTMB 2027`, place: info.place,
-        start: info.date, end: info.date, ts: info.ts, issues: []
+        start: info.date, end: info.dateEnd || info.date, ts: info.ts, issues: []
       });
     }
 
