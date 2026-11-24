@@ -1,5 +1,26 @@
 # Changelog
 
+## [3.5.0] - 2026-11-24
+Corrections suite à la revue du 24/11/2026.
+- **Régression 3.4.0 corrigée : cases des profils « week2 »**. Le scénario UTMB fait partie des clés localStorage et des lignes du Sheet ; depuis que le formulaire envoie toujours `week1`, un profil `week2` qui passait par « Modifier mon profil » ne voyait plus ses cases. Désormais, migration unique au chargement (`migrateLegacyScenario`) :
+  - tout profil `week2` est ramené à `week1` ; les cases locales week2 (y compris d'un profil déjà repassé en week1 par la régression) sont fusionnées dans week1 — union : un jour fait d'un côté reste fait, un « non fait » ne remplace jamais un « fait » ;
+  - les jours faits sont mis en attente d'envoi (mécanisme `pending` existant) vers la ligne week1 du Sheet ; les « non fait » explicites (ex. un jour de mars décoché) partent à la première lecture du Sheet, sauf si le jour est déjà fait côté serveur ;
+  - à la première lecture du Sheet, si le profil vient de week2 **ou s'il n'a pas encore de ligne week1** (appareil neuf), la ligne `week2` est récupérée et ajoutée en attente (`adoptLegacyRow`) ;
+  - les clés locales week2 sont retirées après fusion (copie de secours `zero_to_100_days_done_backup_week2_<parcours>_<prénom>`) pour que la fusion ne se refasse pas. `week2` reste un alias dans `UTMB_SCENARIOS` par sécurité.
+- **Plus d'écran « Première visite » chaque semaine sur iPhone** : Safari efface après 7 jours les cookies posés en JavaScript. Le cookie de profil est réécrit à chaque visite et doublé d'une copie localStorage (`zero_to_100_profile`), lue en repli.
+- **« Prochaine étape » : la course à choisir passe devant**. Si un emplacement n'est pas encore choisi et que son échéance tombe avant la prochaine étape datée, la carte affiche « Choisis ta Course 1 » avec « À choisir avant le 27 déc. 2026 », les week-ends et la distance, et le compte à rebours jusqu'à l'échéance (au lieu d'un WE Choc dans six mois).
+- **CCC : « 9h00 (heure à confirmer) »** — nouveau champ `raceStart.timeTentative: true` dans `config.js`, à retirer quand l'heure 2027 est officielle. MCC inchangée (« date exacte à venir »).
+- **Dodos / J-n : `Math.round` au lieu de `Math.ceil`** dans `daysDiff` (un changement d'heure entre aujourd'hui et la date ne décale plus d'un jour). Dodos et J-n comptent les nuits jusqu'au jour J ; le compte à rebours affiche la durée exacte jusqu'à l'heure de départ : passé 9h00 il montre un jour plein de moins (ex. 274 dodos = 273 j 20 h). C'est voulu, et désormais expliqué dans le code.
+- **Config nettoyée** : `dayOffset` retiré des parcours (mort depuis que `date` est renseigné ; le mécanisme reste documenté en repli) ; semaine UTMB cohérente (`label` « semaine UTMB du 22 au 29 août 2027 », `weekStart` 2027-08-22) ; replis de `app.js` alignés sur `config.js` (MCC `startDate` 2026-04-01).
+- **Robustesse** : si le roster de la carte ou la liste des courses de Qui court où n'ont pas chargé, message neutre « données de la team indisponibles pour l'instant » au lieu de « personne d'autre pour l'instant » (et une course choisie reste affichée comme « Course choisie dans Qui court où ») ; appels Apps Script coupés après 15 s (`AbortController`) → bascule propre en mode hors ligne ; lien « site ↗ » d'une course limité à http/https.
+- **Accessibilité** :
+  - `--text-muted` `#44505f` → `#7a8798` (5,4:1 sur le fond, 5,0:1 sur les cartes ; avant 2,4:1) ; jours manqués `#e06a6a` / `#d9706f` (≥ 6:1) ; jours à venir `#7f8ca0` ;
+  - focus clavier visible : cellule du jour (`:has(:focus-visible)`, repli `:focus-within`), boutons, liens, mois, carte ;
+  - chaque case a un libellé complet lu par VoiceOver : « mardi 24 novembre 2026, WE Choc #2, fait / non fait » ;
+  - plus aucun texte sous 11 px ; dans les cases, le nom d'événement tronqué (« W… ») est remplacé par ⚡ (WE Choc) / 🏁 (course), nom complet en infobulle et dans la liste des étapes ; sous 420 px, le jour de la semaine (déjà dans l'en-tête de colonne) n'est plus répété dans chaque case ;
+  - « Réduire les animations » respecté : « BRAVO ! » en simple fondu, sans feu d'artifice ni confettis ; pulsation du marqueur de départ coupée ;
+  - cocher une case ne reconstruit plus tout le calendrier (seuls la case et les stats sont mis à jour) : le focus et le défilement restent en place ; après une reconstruction (synchro), le focus revient sur la même case.
+
 ## [3.4.0] - 2026-11-20
 - **Date officielle de la CCC 2027 : mercredi 25 août 2027** (annoncée le 20/11/2026). Compte à rebours, dodos et étape finale calés dessus. Heure non encore confirmée : 9h00 comme en 2026. Nouveau champ `raceStart.date` (date fixe, prioritaire sur `dayOffset`).
 - **MCC 2027 : dimanche 22, lundi 23 ou mardi 24 août**, date exacte à venir. Affichage « dimanche 22, lundi 23 ou mardi 24 août (date exacte à venir) », étape finale « 22–24 août 2027 », compte à rebours et dodos sur le premier jour possible (champ `raceStart.dateEnd`).

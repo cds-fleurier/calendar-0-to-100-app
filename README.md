@@ -7,6 +7,13 @@ Application web statique (HTML/CSS/JS vanilla), mobile-first, deployee sur GitHu
 - CSS3
 - JavaScript vanilla
 
+## Fonctionnalites V3.5.0
+- Profil : cookie `zero_to_100_profile` reecrit a chaque visite + copie localStorage (meme nom) lue en repli (Safari purge les cookies JS apres 7 jours).
+- Scenario UTMB : un seul (`week1`). Les anciens profils / cases / lignes du Sheet `week2` sont migres vers `week1` au chargement (`migrateLegacyScenario`, `adoptLegacyRow` dans `scripts/app.js`) ; ne jamais supprimer l'alias `week2` de `UTMB_SCENARIOS`.
+- `raceStart.timeTentative: true` affiche « (heure a confirmer) » apres l'heure de depart.
+- Prochaine etape : une course pas encore choisie dont l'echeance tombe avant la prochaine etape datee est mise en avant (« Choisis ta Course 1 »).
+- Appels Apps Script : delai max 15 s (`FETCH_TIMEOUT_MS`).
+
 ## Fonctionnalites V2.8.0
 - Carte Etapes : countdown live sur l'etape la plus proche (WE Choc, course perso ou course finale) + liste chronologique de toutes les etapes avec J-n.
 - Courses de preparation : 4 emplacements definis dans `RACE_SLOTS` (`scripts/config.js`) avec week-ends autorises (`windows`) et distance (`minKm` / `maxKm`). **Depuis la v3, les courses viennent de « Qui court où ? »** (Google Sheet lu via `TEAM_CHOICES_API`, courses autorisees chargees depuis `qui-court-ou-0to100/data/courses.js`) : nom, distance, date, validation staff, et qui d'autre y va. Les boutons Choisir / Modifier renvoient vers Qui court où. Depuis la v3.2.0, un profil relie a la team ne peut plus saisir de course a la main (bouton « saisir » retire) : une ancienne saisie locale reste affichee avec un lien « Declarer ». La saisie manuelle ne reste que pour un profil non relie.

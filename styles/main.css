@@ -8,7 +8,7 @@
 
   --text:          #e8edf5;
   --text-soft:     #8a97a8;
-  --text-muted:    #44505f;
+  --text-muted:    #7a8798; /* ≥ 4,5:1 sur --bg (5,4:1) et sur les cartes (5,0:1) */
 
   --accent:        #ff6b00;
   --accent-dim:    rgba(255, 107, 0, 0.38);
@@ -63,7 +63,7 @@ body {
 
 .kicker {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 700;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -102,7 +102,7 @@ h2 {
 }
 
 label {
-  font-size: 0.7rem;
+  font-size: 0.74rem;
   font-weight: 600;
   letter-spacing: 0.09em;
   text-transform: uppercase;
@@ -180,7 +180,7 @@ select:focus {
 }
 
 .btn-ghost--sm {
-  font-size: 0.68rem;
+  font-size: 0.74rem;
   padding: 5px 10px;
   white-space: nowrap;
 }
@@ -259,7 +259,7 @@ select:focus {
 }
 
 .ring-sublabel {
-  font-size: 0.6rem;
+  font-size: 0.74rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -296,7 +296,7 @@ select:focus {
 }
 
 .stat-lbl {
-  font-size: 0.62rem;
+  font-size: 0.74rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -354,7 +354,7 @@ select:focus {
 }
 
 .countdown-sub {
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 600;
   letter-spacing: 0.05em;
   color: var(--text-soft);
@@ -389,7 +389,7 @@ select:focus {
 }
 
 .cd-lbl {
-  font-size: 0.56rem;
+  font-size: 0.74rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -452,7 +452,7 @@ select:focus {
 .leaflet-control-attribution {
   background: rgba(7, 9, 14, 0.7) !important;
   color: var(--text-muted);
-  font-size: 0.58rem;
+  font-size: 0.74rem;
 }
 
 .leaflet-control-attribution a { color: var(--text-soft); }
@@ -493,7 +493,7 @@ select:focus {
   top: 100%;
   transform: translate(-50%, 6px);
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 0.68rem;
+  font-size: 0.74rem;
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -510,7 +510,7 @@ select:focus {
   background: rgba(7, 9, 14, 0.9);
   border: 1px solid var(--border-hi);
   color: var(--text);
-  font-size: 0.66rem;
+  font-size: 0.74rem;
   font-weight: 600;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 }
@@ -523,7 +523,7 @@ select:focus {
   right: 8px;
   z-index: 800;
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -541,7 +541,7 @@ select:focus {
   left: 50%;
   transform: translateX(-50%);
   z-index: 500;
-  font-size: 0.66rem;
+  font-size: 0.74rem;
   font-weight: 600;
   color: var(--text);
   padding: 6px 12px;
@@ -556,7 +556,7 @@ select:focus {
 .map-fallback {
   padding: 28px 16px;
   text-align: center;
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   color: var(--text-muted);
 }
 
@@ -624,7 +624,7 @@ select:focus {
 
 .month-header-day {
   text-align: center;
-  font-size: 0.6rem;
+  font-size: 0.74rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -669,7 +669,7 @@ select:focus {
 }
 
 .day-label {
-  font-size: 0.56rem;
+  font-size: 0.74rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -730,13 +730,13 @@ select:focus {
 
 /* ── State: missed (past + not done) */
 .day-cell--missed { background: rgba(255, 255, 255, 0.015); }
-.day-cell--missed .day-number { color: rgba(220, 100, 100, 0.7); }
-.day-cell--missed .day-label  { color: rgba(220, 100, 100, 0.5); }
+.day-cell--missed .day-number { color: #e06a6a; }   /* 6,1:1 */
+.day-cell--missed .day-label  { color: #d9706f; }
 
 /* ── State: future ───────────── */
 .day-cell--future { background: rgba(255, 255, 255, 0.014); }
-.day-cell--future .day-number { color: #6b7a90; }
-.day-cell--future .day-label  { color: #4e5a6a; }
+.day-cell--future .day-number { color: #7f8ca0; }
+.day-cell--future .day-label  { color: var(--text-muted); }
 
 /* ── Events ──────────────────────── */
 .day-cell--event-choc,
@@ -759,17 +759,18 @@ select:focus {
 .day-cell--event-race::before  { background: #f5c518; }
 
 .event-tag {
-  font-size: 0.5rem;
+  font-size: 0.74rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  padding: 2px 4px;
+  letter-spacing: 0;
+  padding: 1px 3px;
   border-radius: 3px;
   margin-top: auto;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
+  align-self: flex-start;
+  line-height: 1.2;
 }
 
 .day-cell--event-choc .event-tag {
@@ -810,7 +811,7 @@ select:focus {
 
 .steps-kicker {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 0.66rem;
+  font-size: 0.74rem;
   font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -873,7 +874,7 @@ select:focus {
 .steps-item--past .steps-label { text-decoration: line-through; }
 
 .steps-when {
-  font-size: 0.66rem;
+  font-size: 0.74rem;
   font-weight: 600;
   letter-spacing: 0.03em;
   color: var(--text-soft);
@@ -896,7 +897,7 @@ select:focus {
 .steps-item--slot .steps-label { color: var(--text-soft); font-weight: 500; }
 
 .steps-meta {
-  font-size: 0.66rem;
+  font-size: 0.74rem;
   color: var(--text-soft);
   line-height: 1.3;
 }
@@ -904,7 +905,7 @@ select:focus {
 .steps-meta--warn { color: #f0b04a; }
 
 .steps-status {
-  font-size: 0.62rem;
+  font-size: 0.74rem;
   font-weight: 600;
   letter-spacing: 0.03em;
 }
@@ -928,7 +929,7 @@ select:focus {
 }
 .steps-right a.btn-ghost { text-decoration: none; display: inline-block; }
 .steps-item--slot .steps-right { flex-direction: column; align-items: flex-end; gap: 4px; }
-.btn-ghost--quiet { opacity: .6; font-size: 0.7rem; }
+.btn-ghost--quiet { opacity: .6; font-size: 0.74rem; }
 .btn-ghost--quiet:hover { opacity: 1; }
 
 /* Liaison du profil à la team */
@@ -1089,7 +1090,7 @@ input[type="date"] {
 }
 
 .check-text small {
-  font-size: 0.68rem;
+  font-size: 0.74rem;
   font-weight: 400;
   color: var(--text-soft);
 }
@@ -1132,7 +1133,7 @@ input[type="date"] {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.7rem;
+  font-size: 0.74rem;
   letter-spacing: 0.06em;
   color: var(--text-muted);
   padding: 6px 4px;
@@ -1233,20 +1234,59 @@ input[type="date"] {
 
   .day-cell   { min-height: 48px; padding: 5px 4px; }
   .day-number { font-size: 0.92rem; }
-  .day-label  { font-size: 0.52rem; }
+  .day-label  { font-size: 0.74rem; }
 
   .countdown-grid { gap: 6px; }
   .cd-unit  { padding: 10px 2px 8px; }
   .cd-num   { font-size: 1.9rem; }
-  .cd-lbl   { font-size: 0.5rem; letter-spacing: 0.06em; }
+  .cd-lbl   { font-size: 0.74rem; letter-spacing: 0.06em; }
   .race-map { height: 190px; }
 
   .steps-item { grid-template-columns: 72px minmax(0, 1fr) auto; gap: 8px; padding: 8px 8px 8px 10px; }
-  .steps-when { font-size: 0.6rem; }
+  .steps-when { font-size: 0.74rem; }
   .steps-label { font-size: 0.82rem; }
   .field-row { grid-template-columns: 1fr; gap: 0; }
 }
 
 /* Synchro des jours cochés entre appareils (v3.2.0) */
-.sync-status { margin: 10px 0 0; font-size: 0.72rem; color: var(--text-soft); }
+.sync-status { margin: 10px 0 0; font-size: 0.74rem; color: var(--text-soft); }
 .sync-status--warn { color: #ffd79a; }
+
+/* ─── Accessibilité (v3.5.0) ─────────────────────────────────────────────── */
+/* Focus clavier visible partout (les champs gardent leur halo orange) */
+.btn-primary:focus-visible,
+.btn-ghost:focus-visible,
+.map-hint:focus-visible,
+a:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.leaflet-container:focus-visible { box-shadow: inset 0 0 0 2px var(--accent); }
+
+/* Case du calendrier : la vraie case à cocher est invisible, c'est la cellule qui montre le focus */
+.day-cell:has(.day-checkbox:focus-visible) {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+@supports not selector(:has(*)) {
+  .day-cell:focus-within { outline: 2px solid #fff; outline-offset: 2px; }
+}
+
+/* Petits écrans : le jour de la semaine est déjà dans l'en-tête de colonne */
+@media (max-width: 420px) {
+  .day-label { display: none; }
+}
+
+/* « Réduire les animations » */
+@media (prefers-reduced-motion: reduce) {
+  .spark, .burst-ring, .confetti { display: none; }
+  .celebration-message { animation: fade-message 1.7s ease-out forwards; }
+  .race-pin--start::after { animation: none; }
+  .day-cell, .day-cell::after, .month-accordion summary::after { transition: none; }
+  .day-cell:active { transform: none; }
+}
+@keyframes fade-message {
+  0%, 100% { opacity: 0; }
+  15%, 80% { opacity: 1; }
+}

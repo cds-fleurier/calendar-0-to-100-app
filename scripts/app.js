@@ -1,14 +1,15 @@
 (function runApp() {
   const safeAppVersion = typeof APP_VERSION === "string" ? APP_VERSION : "1.0.0";
-  const FALLBACK_CCC = { date: "2027-08-25", dayOffset: 4, time: "09:00", utcOffset: "+02:00", place: "Courmayeur",     route: "ccc" };
-  const FALLBACK_MCC = { date: "2027-08-22", dateEnd: "2027-08-24", dayOffset: 0, time: "10:00", utcOffset: "+02:00", place: "Martigny-Combe", route: "mcc" };
+  /* Replis si config.js n'a pas chargé — à garder alignés sur config.js */
+  const FALLBACK_CCC = { date: "2027-08-25", time: "09:00", timeTentative: true, utcOffset: "+02:00", place: "Courmayeur", route: "ccc" };
+  const FALLBACK_MCC = { date: "2027-08-22", dateEnd: "2027-08-24", time: "10:00", utcOffset: "+02:00", place: "Martigny-Combe", route: "mcc" };
   const safeTracks = typeof TRACKS === "object" && TRACKS ? TRACKS : {
     "0to100": { label: "0 to 100", race: "CCC", startDate: "2026-03-02", raceStart: FALLBACK_CCC },
-    "0to40":  { label: "0 to 40",  race: "MCC", startDate: "2026-04-06", raceStart: FALLBACK_MCC }
+    "0to40":  { label: "0 to 40",  race: "MCC", startDate: "2026-04-01", raceStart: FALLBACK_MCC }
   };
   const safeUtmbScenarios = typeof UTMB_SCENARIOS === "object" && UTMB_SCENARIOS ? UTMB_SCENARIOS : {
-    week1: { label: "22 août 2027 au 29 août 2027", weekStart: "2027-08-23", targetDate: "2027-08-29" },
-    week2: { label: "22 août 2027 au 29 août 2027", weekStart: "2027-08-23", targetDate: "2027-08-29" }
+    week1: { label: "semaine UTMB du 22 au 29 août 2027", weekStart: "2027-08-22", targetDate: "2027-08-29" },
+    week2: { label: "semaine UTMB du 22 au 29 août 2027", weekStart: "2027-08-22", targetDate: "2027-08-29" }
   };
 
   const RING_CIRC     = 326.73; /* 2π × 52 */
@@ -88,6 +89,8 @@
   const linkGoBtn       = document.getElementById("link-go");
 
   const PROFILE_COOKIE  = "zero_to_100_profile";
+  const PROFILE_STORE   = "zero_to_100_profile";   /* copie localStorage du cookie (v3.5.0) */
+  const FETCH_TIMEOUT_MS = 15000;                  /* Apps Script peut mettre plusieurs secondes */
   const DONE_KEY_PREFIX = "zero_to_100_days_done";
   const RACES_KEY_PREFIX = "zero_to_100_races";
 
@@ -106,11 +109,32 @@
     return `${y}-${m}-${d}`;
   }
 
+  /* Nombre de jours calendaires entre deux dates (minuit à minuit). Math.round et non ceil :
+     un changement d'heure entre les deux fait 23 h ou 25 h, pas un jour de plus ou de moins.
+     C'est ce que comptent les « dodos » et les J-n (nuits restantes). Le compte à rebours, lui,
+     affiche la durée exacte jusqu'à l'heure de départ : passé l'heure du départ dans la journée,
+     il indique un jour plein de moins que les dodos (ex. 271 dodos = 270 j 18 h). */
   function daysDiff(from, to) {
     const ms  = 24 * 60 * 60 * 1000;
     const a   = new Date(from.getFullYear(), from.getMonth(), from.getDate());
     const b   = new Date(to.getFullYear(),   to.getMonth(),   to.getDate());
-    return Math.ceil((b - a) / ms);
+    return Math.round((b - a) / ms);
+  }
+
+  /* fetch avec délai max : sans réponse d'Apps Script, on abandonne (le hors-ligne prend le relais) */
+  function fetchWithTimeout(url, options) {
+    const ctrl  = typeof AbortController === "function" ? new AbortController() : null;
+    const timer = ctrl ? setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS) : null;
+    return fetch(url, Object.assign({}, options, ctrl ? { signal: ctrl.signal } : {}))
+      .finally(() => clearTimeout(timer));
+  }
+
+  /* Lien externe : seulement http(s) (pas de javascript: venu d'un fichier de données) */
+  function safeUrl(url) {
+    try {
+      const u = new URL(String(url));
+      return u.protocol === "https:" || u.protocol === "http:" ? u.href : null;
+    } catch { return null; }
   }
 
   function formatDate(date) {
@@ -180,22 +204,32 @@
     return null;
   }
 
-  function getSavedProfile() {
-    const raw = getCookie(PROFILE_COOKIE);
+  /* Safari (ITP) efface les cookies posés en JS après 7 jours sans visite : le cookie est
+     réécrit à chaque visite (showTracker) et doublé d'une copie localStorage, lue en repli. */
+  function parseProfile(raw) {
     if (!raw) return null;
     try {
       const p = JSON.parse(raw);
-      if (!p.firstName || !safeTracks[p.track] || !safeUtmbScenarios[p.utmbScenario]) return null;
+      if (!p || !p.firstName || !safeTracks[p.track] || !safeUtmbScenarios[p.utmbScenario]) return null;
       return p;
     } catch { return null; }
   }
 
+  function getSavedProfile() {
+    let stored = null;
+    try { stored = localStorage.getItem(PROFILE_STORE); } catch { /* stockage indisponible */ }
+    return parseProfile(getCookie(PROFILE_COOKIE)) || parseProfile(stored);
+  }
+
   function saveProfile(profile) {
-    setCookie(PROFILE_COOKIE, JSON.stringify(profile), 365);
+    const json = JSON.stringify(profile);
+    setCookie(PROFILE_COOKIE, json, 365);
+    try { localStorage.setItem(PROFILE_STORE, json); } catch { /* stockage indisponible */ }
   }
 
   function clearProfile() {
     setCookie(PROFILE_COOKIE, "", -1);
+    try { localStorage.removeItem(PROFILE_STORE); } catch { /* stockage indisponible */ }
   }
 
   /* ── Identité partagée avec les autres outils de la team ─────────────── */
@@ -292,6 +326,9 @@
 
   const TEAM_CACHE_KEY = "team_choices_cache";
   const COURSES_LIST   = Array.isArray(window.COURSES) ? window.COURSES : [];
+  /* Scripts cross-repo (roster de la carte, courses de Qui court où) pas chargés : réseau, ou
+     dépôt en cours de mise à jour → on le dit au lieu d'afficher « personne d'autre » */
+  const TEAM_DATA_MISSING = "données de la team indisponibles pour l'instant";
   const courseById     = {};
   for (const c of COURSES_LIST) courseById[c.id] = c;
   let teamChoices = null;   /* null tant que rien n'est chargé (ni réseau, ni cache) */
@@ -309,7 +346,7 @@
     if (teamChoices === null) teamChoices = readTeamCache();
     if (!api) return;
     try {
-      const res  = await fetch(api, { cache: "no-store" });
+      const res  = await fetchWithTimeout(api, { cache: "no-store" });
       const data = await res.json();
       if (data && data.ok && Array.isArray(data.choices)) {
         teamChoices = data.choices;
@@ -348,14 +385,21 @@
       };
     }
     const course = courseById[choice.course];
-    if (!course) return null;
+    if (!course) {
+      if (COURSES_LIST.length) return null;   /* course retirée de la liste */
+      /* Liste des courses pas chargée : le choix existe, on ne sait juste pas encore lequel */
+      return {
+        name: "Course choisie dans Qui court où", date: ws.length ? ws[0].from : null, km: null, place: null,
+        validated: true, team: true, dateApprox: true, unknown: true, bloc, companions
+      };
+    }
     /* Course de la liste du staff : validée par construction */
     return {
       name: course.dept ? `${course.name} (${course.dept})` : course.name,
       date: course.date || course.weekend || (ws.length ? ws[0].from : null),
       km: typeof course.km === "number" ? course.km : null,
       place: null, validated: true, team: true, bloc, companions,
-      url: course.url || null, signup: course.signup || null
+      url: course.url ? safeUrl(course.url) : null, signup: course.signup || null
     };
   }
 
@@ -471,7 +515,7 @@
     syncInFlight = true;
     try {
       /* Pas de Content-Type → pas de preflight CORS (Apps Script ne gère pas OPTIONS) */
-      const res = await fetch(syncApi(), {
+      const res = await fetchWithTimeout(syncApi(), {
         method: "POST",
         keepalive: true, /* la requête aboutit même si l'onglet est fermé / l'appli mise en arrière-plan */
         body: JSON.stringify({ type: "cal", participant: syncId(profile), track: profile.track, scenario: profile.utmbScenario, set: sent })
@@ -506,10 +550,26 @@
     if (throttle && Date.now() - lastPullAt < PULL_MIN_INTERVAL_MS) return;
     lastPullAt = Date.now();
     try {
-      const res = await fetch(`${syncApi()}?cal=${encodeURIComponent(syncId(profile))}`, { cache: "no-store" });
+      const res = await fetchWithTimeout(`${syncApi()}?cal=${encodeURIComponent(syncId(profile))}`, { cache: "no-store" });
       const data = await res.json();
       if (!data || !data.ok || !Array.isArray(data.cal)) throw new Error((data && data.error) || "réponse invalide");
       const row = data.cal.find((r) => r.track === profile.track && r.scenario === profile.utmbScenario);
+      /* Ancienne ligne week2 : reprise si le profil vient de week2, ou s'il n'y a pas encore de
+         ligne week1 (appareil neuf d'un participant qui était en week2) */
+      const legacyRow = profile.utmbScenario !== LEGACY_SCENARIO &&
+        data.cal.find((r) => r.track === profile.track && r.scenario === LEGACY_SCENARIO);
+      if (legacyRow && (profile.legacyScenario || !row)) adoptLegacyRow(profile, legacyRow, row);
+      if (profile.legacyScenario) {
+        /* Les « non fait » explicites issus de la fusion (ex. un jour de mars décoché) partent
+           aussi, sauf si le jour est déjà fait côté serveur */
+        const local = getDoneDays(profile), server = (row && row.done) || {}, pending = readJson(pendingKey(profile), {});
+        for (const k of Object.keys(local)) {
+          if (local[k] === false && server[k] !== true && !own(pending, k)) pending[k] = false;
+        }
+        writeJson(pendingKey(profile), pending);
+        delete profile.legacyScenario;
+        saveProfile(profile);
+      }
       if (!row && !readJson(migratedKey(profile), false)) {
         /* Premier passage : on envoie ce qui est déjà coché sur cet appareil */
         const local = getDoneDays(profile);
@@ -538,6 +598,66 @@
 
   function own(obj, key) {
     return Object.prototype.hasOwnProperty.call(obj, key);
+  }
+
+  /* ── Migration week2 → week1 (v3.5.0) ─────────────────────────────────────
+     Le scénario UTMB fait partie des clés localStorage et des lignes du Sheet. Depuis la v3.4.0
+     il n'y a plus qu'une semaine (week1) ; un profil week2 (ou un profil repassé en week1 par
+     « Modifier mon profil » en v3.4.0) garde ses cases sous week2. Au chargement, une seule fois :
+     les cases locales week2 sont fusionnées dans week1 (union des jours cochés), mises en attente
+     d'envoi vers la ligne week1 du Sheet, et le profil note `legacyScenario` pour qu'à la
+     prochaine lecture du Sheet la ligne week2 soit récupérée aussi (appareil sans copie locale). */
+  const LEGACY_SCENARIO = "week2";
+
+  /* Ajoute `src` à `target` : un jour fait d'un côté reste fait ; un « non fait » explicite ne
+     remplace jamais un « fait » */
+  function unionDone(target, src) {
+    for (const k of Object.keys(src || {})) {
+      if (src[k] === true) target[k] = true;
+      else if (!own(target, k)) target[k] = Boolean(src[k]);
+    }
+    return target;
+  }
+
+  function migrateLegacyScenario(profile) {
+    let p = profile;
+    if (p.utmbScenario === LEGACY_SCENARIO) {
+      p = Object.assign({}, p, { utmbScenario: "week1", legacyScenario: LEGACY_SCENARIO });
+    }
+    const old      = Object.assign({}, p, { utmbScenario: LEGACY_SCENARIO });
+    const oldDone  = readJson(doneStorageKey(old), null);
+    const oldPend  = syncId(p) ? readJson(pendingKey(old), null) : null;
+    if (oldDone || oldPend) {
+      const done = unionDone(getDoneDays(p), oldDone);
+      setDoneDays(p, done);
+      if (syncId(p)) {
+        const pending = unionDone(readJson(pendingKey(p), {}), oldPend);
+        for (const k of Object.keys(done)) if (done[k] === true) pending[k] = true;
+        writeJson(pendingKey(p), pending);
+      }
+      /* Copie de secours, puis on retire les clés week2 (sinon la fusion se referait à chaque
+         visite et recocherait un jour décoché depuis) */
+      if (oldDone) writeJson(`${DONE_KEY_PREFIX}_backup_${LEGACY_SCENARIO}_${p.track}_${p.firstName.toLowerCase()}`, oldDone);
+      try {
+        localStorage.removeItem(doneStorageKey(old));
+        if (syncId(p)) localStorage.removeItem(pendingKey(old));
+      } catch { /* stockage indisponible */ }
+      if (!p.legacyScenario) p = Object.assign({}, p, { legacyScenario: LEGACY_SCENARIO });
+    }
+    if (p !== profile) saveProfile(p);
+    return p;
+  }
+
+  /* Ligne week2 du Sheet → jours en attente pour la ligne week1 (mêmes règles d'union) */
+  function adoptLegacyRow(profile, legacyRow, row) {
+    const server  = (row && row.done) || {};
+    const pending = readJson(pendingKey(profile), {});
+    const legacy  = legacyRow.done || {};
+    for (const k of Object.keys(legacy)) {
+      if (legacy[k] === true && server[k] !== true) pending[k] = true;
+      else if (legacy[k] !== true && !own(server, k) && !own(pending, k)) pending[k] = false;
+    }
+    writeJson(pendingKey(profile), pending);
   }
 
   function isDefaultChecked(profile, day) {
@@ -620,7 +740,9 @@
     msg.textContent = "BRAVO !";
     celebLayer.appendChild(msg);
 
-    const bursts = [
+    /* Réglage « Réduire les animations » de l'iPhone : juste le message, sans feu d'artifice */
+    const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const bursts = reduceMotion ? [] : [
       { x: 22, y: 62, delay: 0 },
       { x: 50, y: 52, delay: 0.08 },
       { x: 78, y: 62, delay: 0.16 }
@@ -667,7 +789,7 @@
     return String(n).padStart(2, "0");
   }
 
-  /* Date/heure de départ = date officielle si connue, sinon lundi de la semaine UTMB + dayOffset */
+  /* Date/heure de départ = date officielle si connue, sinon premier jour de la semaine UTMB + dayOffset */
   function raceStartInfo(profile) {
     const track    = safeTracks[profile.track];
     const scenario = safeUtmbScenarios[profile.utmbScenario];
@@ -685,6 +807,7 @@
       date:  day,
       dateEnd: rs.date && rs.dateEnd ? parseDate(rs.dateEnd) : null,
       time:  rs.time,
+      timeTentative: Boolean(rs.timeTentative),
       ts:    new Date(`${toDayKey(day)}T${rs.time}:00${rs.utcOffset}`).getTime()
     };
   }
@@ -711,8 +834,9 @@
         const when = new Intl.DateTimeFormat("fr-FR", {
           weekday: "long", day: "numeric", month: "long"
         }).format(info.date);
+        const tentative = info.timeTentative ? " (heure à confirmer)" : "";
         countdownSub.textContent =
-          `Départ ${info.place} · ${when}, ${info.time.replace(":", "h")}`;
+          `Départ ${info.place} · ${when}, ${info.time.replace(":", "h")}${tentative}`;
       }
     }
   }
@@ -1089,7 +1213,8 @@
 
   function stepMetaText(step) {
     const bits = [];
-    if (step.dateApprox) bits.push("date à préciser");
+    if (step.race && step.race.unknown) bits.push(TEAM_DATA_MISSING);
+    else if (step.dateApprox) bits.push("date à préciser");
     if (typeof step.km === "number") bits.push(`${step.km} km`);
     if (step.place) bits.push(step.place);
     if (step.optional) bits.push("optionnel");
@@ -1103,12 +1228,24 @@
     const steps    = buildSteps(profile);
 
     /* Prochaine étape = la première en cours ou à venir (les courses non choisies n'ont pas de date) */
-    const next = steps.find((st) => {
+    const dated = steps.find((st) => {
       const status = stepStatus(st, todayKey);
       return status === "now" || status === "future";
     });
+    /* …sauf si une course reste à choisir et que son échéance tombe avant : c'est elle l'urgence
+       (sinon on afficherait un WE Choc dans six mois alors que la Course 1 se choisit ce mois-ci) */
+    const toChoose = steps.find((st) => st.kind === "slot" && st.start && toDayKey(st.start) >= todayKey);
+    const next = toChoose && (!dated || toChoose.ts <= dated.ts) ? toChoose : dated;
 
-    if (next) {
+    if (next && next.kind === "slot") {
+      if (stepFlag)   stepFlag.textContent   = STEP_FLAGS.slot;
+      if (stepsTitle) stepsTitle.textContent = `Choisis ta ${next.label}`;
+      if (stepSub) {
+        const rule = slotRuleText(next.slot);
+        stepSub.textContent = `À choisir avant le ${formatShort(next.start)}` + (rule ? ` · ${rule}` : "");
+      }
+      startStepCountdown(next.ts);
+    } else if (next) {
       const status = stepStatus(next, todayKey);
       if (stepFlag)   stepFlag.textContent   = STEP_FLAGS[next.kind] || "⛰️";
       if (stepsTitle) stepsTitle.textContent = next.label;
@@ -1171,13 +1308,15 @@
         body.appendChild(line);
       }
 
-      /* Qui d'autre y va (depuis « Qui court où ? ») */
-      if (step.team) {
+      /* Qui d'autre y va (depuis « Qui court où ? ») — sans répéter « indisponible » deux fois */
+      if (step.team && !(step.race.unknown && !ROSTER.length)) {
         const who = document.createElement("span");
         who.className = "steps-with";
-        who.textContent = step.companions.length
-          ? `🏃 avec ${step.companions.join(", ")}`
-          : "🏃 personne d'autre pour l'instant";
+        who.textContent = !ROSTER.length
+          ? `🏃 ${TEAM_DATA_MISSING}`
+          : step.companions.length
+            ? `🏃 avec ${step.companions.join(", ")}`
+            : "🏃 personne d'autre pour l'instant";
         body.appendChild(who);
       }
 
@@ -1338,16 +1477,17 @@
 
   /* ── Render ───────────────────────────────────────────────────────────── */
 
-  function renderCalendar(profile) {
+  function calendarBounds(profile) {
     const track    = safeTracks[profile.track];
     const scenario = safeUtmbScenarios[profile.utmbScenario];
-    const start    = parseDate(track.startDate);
-    const end      = parseDate(scenario.targetDate);
-    const now      = new Date();
-    const todayKey = toDayKey(now);
+    return { track, scenario, start: parseDate(track.startDate), end: parseDate(scenario.targetDate) };
+  }
 
-    const doneDays   = getDoneDays(profile);
-    /* Dodos = jusqu'au jour de course, pas jusqu'à la fin de la semaine UTMB */
+  /* Anneau, dodos, streak : recalculés à chaque coche sans reconstruire la grille */
+  function renderStats(profile, doneDays) {
+    const { track, start, end } = calendarBounds(profile);
+    const now        = new Date();
+    /* Dodos = nuits jusqu'au jour de course (= J-n), pas jusqu'à la fin de la semaine UTMB */
     const raceInfo   = raceStartInfo(profile);
     const dodosLeft  = Math.max(0, daysDiff(now, raceInfo ? raceInfo.date : end));
     const totalDays  = Math.max(0, daysDiff(start, end) + 1);
@@ -1367,6 +1507,28 @@
     if (streakValue)   streakValue.textContent  = String(streak);
     if (progressPctEl) progressPctEl.textContent = `${pct}%`;
     if (progressRing)  progressRing.style.strokeDashoffset = (RING_CIRC * (1 - pct / 100)).toFixed(2);
+    return totalDays;
+  }
+
+  const longDayFmt = new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+
+  /* État visuel + libellé lu par VoiceOver d'une case : « lundi 3 novembre 2026, fait » */
+  function applyDayState(cell, checkbox, day, checked, todayKey, ev) {
+    const dayKey = toDayKey(day);
+    cell.classList.toggle("day-cell--done",   checked);
+    cell.classList.toggle("day-cell--missed", !checked && dayKey < todayKey);
+    cell.classList.toggle("day-cell--future", !checked && dayKey > todayKey);
+    checkbox.checked = checked;
+    checkbox.setAttribute("aria-label",
+      `${longDayFmt.format(day)}${ev ? `, ${ev.label}` : ""}, ${checked ? "fait" : "non fait"}`);
+  }
+
+  function renderCalendar(profile) {
+    const { track, scenario, start, end } = calendarBounds(profile);
+    const now      = new Date();
+    const todayKey = toDayKey(now);
+    const doneDays = getDoneDays(profile);
+    const totalDays = renderStats(profile, doneDays);
 
     /* Profile lines */
     if (welcomeLine) welcomeLine.textContent = `Salut ${profile.firstName}.`;
@@ -1375,6 +1537,10 @@
       `Du ${formatDate(start)} au ${formatDate(end)} — ${totalDays} jours`;
 
     const eventMap = buildEventMap(profile, start, end);
+
+    /* Reconstruction (synchro, course modifiée) : on garde la case qui avait le focus clavier */
+    const focusedDay = document.activeElement && document.activeElement.classList &&
+      document.activeElement.classList.contains("day-checkbox") ? document.activeElement.dataset.day : null;
 
     /* Preserve open-month state */
     const openKeys = new Set();
@@ -1437,48 +1603,51 @@
           continue;
         }
 
-        const isToday  = dayKey === todayKey;
-        const isPast   = dayKey < todayKey;
-        const isFuture = dayKey > todayKey;
-        const checked  = isChecked(profile, doneDays, day);
-
-        if (isToday)              cell.classList.add("day-cell--today");
-        if (checked)              cell.classList.add("day-cell--done");
-        else if (isPast)          cell.classList.add("day-cell--missed");
-        else if (isFuture)        cell.classList.add("day-cell--future");
+        if (dayKey === todayKey) cell.classList.add("day-cell--today");
+        const ev = eventMap[dayKey];
 
         const topSpan = document.createElement("span");
         topSpan.className   = "day-label";
+        topSpan.setAttribute("aria-hidden", "true");
         topSpan.textContent = weekdayLabel(day);
 
         const numSpan = document.createElement("span");
         numSpan.className   = "day-number";
         numSpan.textContent = String(day.getDate());
+        numSpan.setAttribute("aria-hidden", "true");
 
         const checkbox = document.createElement("input");
         checkbox.className = "day-checkbox";
         checkbox.type      = "checkbox";
-        checkbox.checked   = checked;
+        checkbox.dataset.day = dayKey;
+        applyDayState(cell, checkbox, day, isChecked(profile, doneDays, day), todayKey, ev);
 
+        /* Une coche ne met à jour que sa case et les stats : pas de reconstruction, le focus
+           et le défilement restent en place */
         checkbox.addEventListener("change", function onToggle() {
-          const wasChecked = isChecked(profile, doneDays, day);
-          doneDays[dayKey] = checkbox.checked;
-          setDoneDays(profile, doneDays);
+          const current    = getDoneDays(profile);
+          const wasChecked = isChecked(profile, current, day);
+          current[dayKey] = checkbox.checked;
+          setDoneDays(profile, current);
           queueDoneChange(profile, dayKey, checkbox.checked);
+          applyDayState(cell, checkbox, day, checkbox.checked, toDayKey(new Date()), ev);
+          renderStats(profile, current);
           if (!wasChecked && checkbox.checked) showCelebration();
-          renderCalendar(profile);
         });
 
         cell.appendChild(topSpan);
         cell.appendChild(numSpan);
 
-        const ev = eventMap[dayKey];
         if (ev) {
           cell.classList.add(`day-cell--event-${ev.type}`);
           if (ev.optional) cell.classList.add("day-cell--event-optional");
           const tag = document.createElement("span");
+          /* Pictogramme plutôt que le nom (illisible à 11 px dans une case de 40 px) ; le nom
+             complet est dans l'aria-label de la case, dans l'infobulle et dans la liste des étapes */
           tag.className   = "event-tag";
-          tag.textContent = ev.label;
+          tag.textContent = ev.type === "choc" ? "⚡" : "🏁";
+          tag.setAttribute("aria-hidden", "true");
+          cell.title = ev.label;
           cell.appendChild(tag);
         }
 
@@ -1488,6 +1657,11 @@
 
       details.appendChild(grid);
       calendarList.appendChild(details);
+    }
+
+    if (focusedDay) {
+      const again = calendarList.querySelector(`.day-checkbox[data-day="${focusedDay}"]`);
+      if (again) again.focus({ preventScroll: true });
     }
   }
 
@@ -1505,6 +1679,7 @@
   }
 
   function showTracker(profile) {
+    profile = migrateLegacyScenario(profile);
     /* Profil d'avant la v3 : on le relie au roster si le prénom est sans ambiguïté */
     if (!profile.participantId) {
       const guess = matchRoster(profile.firstName);
@@ -1514,6 +1689,7 @@
       if (upgraded) profile = linkProfile(profile, upgraded.id); /* garde firstName → cases locales conservées, renvoyées sous le vrai id */
       else setTeamMe(profile.participantId);
     }
+    saveProfile(profile);   /* réécrit à chaque visite : Safari ne le purge pas après 7 jours */
     onboardingCard.classList.add("hidden");
     trackerCard.classList.remove("hidden");
     calendarCard.classList.remove("hidden");

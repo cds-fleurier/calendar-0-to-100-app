@@ -1,4 +1,4 @@
-const APP_VERSION = "3.4.0";
+const APP_VERSION = "3.5.0";
 
 /*
  * Liaison avec les autres outils de la team (même origine cds-fleurier.github.io,
@@ -17,18 +17,19 @@ const SLOT_BLOCS       = { race1: "noel", race2: "mars", race3: "juin", race4: "
 
 /*
  * raceStart — départ de la course 2027.
- *   date      : date officielle fixe (AAAA-MM-JJ) — prioritaire, indépendante de la semaine choisie
- *   dayOffset : sinon, relatif au lundi de la semaine UTMB choisie (0 = lundi, 4 = vendredi).
- *   dateEnd   : si la date exacte n'est pas encore connue, dernier jour possible (le compte à
- *               rebours vise alors le premier jour possible, `date`).
- * CCC 2027 : date officielle annoncée le 20/11/2026 = mercredi 25 août 2027 (heure non confirmée,
- * on garde 09h00 comme en 2026).
- * MCC 2027 : dimanche 22, lundi 23 ou mardi 24 août 2027 (20/11/2026), date exacte à venir. `route` pointe vers assets/routes/<route>.json
- * (tracé affiché sur la carte).
- * Horaires confirmés par les métadonnées des GPX officiels 2026 :
- *   CCC vendredi 09h00 (startdate 2026-08-28T09:00:05+02:00)
- *   MCC lundi    10h00 (startdate 2026-08-24T10:00:03+02:00)
- * Reste à réajuster si l'organisation change le programme en 2027.
+ *   date         : date officielle fixe (AAAA-MM-JJ).
+ *   dateEnd      : si la date exacte n'est pas encore connue, dernier jour possible (le compte à
+ *                  rebours vise alors le premier jour possible, `date`).
+ *   time         : heure de départ (heure locale, décalage `utcOffset`).
+ *   timeTentative: true = heure pas encore confirmée par l'organisation (« heure à confirmer »).
+ *   dayOffset    : seulement si `date` est absent — jours après `weekStart` de la semaine UTMB
+ *                  (0 = premier jour). Plus utilisé depuis que les dates 2027 sont connues.
+ * CCC 2027 : date officielle annoncée le 20/11/2026 = mercredi 25 août 2027 ; heure non confirmée,
+ * 09h00 comme en 2026 (GPX officiel 2026 : startdate 2026-08-28T09:00:05+02:00).
+ * MCC 2027 : dimanche 22, lundi 23 ou mardi 24 août 2027 (20/11/2026), date exacte à venir ;
+ * 10h00 comme en 2026 (startdate 2026-08-24T10:00:03+02:00). Quand la date tombe : mettre `date`,
+ * supprimer `dateEnd`, vérifier l'heure.
+ * `route` pointe vers assets/routes/<route>.json (tracé affiché sur la carte).
  */
 const TRACKS = {
   "0to100": {
@@ -37,8 +38,8 @@ const TRACKS = {
     startDate: "2026-03-02",
     raceStart: {
       date: "2027-08-25",
-      dayOffset: 4,
       time: "09:00",
+      timeTentative: true,
       utcOffset: "+02:00",
       place: "Courmayeur",
       route: "ccc"
@@ -51,7 +52,6 @@ const TRACKS = {
     raceStart: {
       date: "2027-08-22",
       dateEnd: "2027-08-24",
-      dayOffset: 0,
       time: "10:00",
       utcOffset: "+02:00",
       place: "Martigny-Combe",
@@ -141,14 +141,16 @@ const RACE_SLOTS = {
 };
 
 /*
- * Semaine UTMB 2027 : fixée le 20/11/2026 (CCC mer. 25 août, MCC 22-24 août).
- * L'ancien choix « 30 août – 5 sept. » (week2) n'existe plus : la clé est gardée comme alias
- * de la semaine officielle pour ne pas perdre les cases cochées / la synchro (clés de stockage
- * et lignes du Sheet contiennent le scénario).
+ * Semaine UTMB 2027 : du dimanche 22 au dimanche 29 août (fixée le 20/11/2026 : CCC mer. 25,
+ * MCC 22-24). `targetDate` = dernier jour du calendrier ; `weekStart` ne sert que de repli
+ * (raceStart sans `date`).
+ * L'ancien choix « 30 août – 5 sept. » (week2) n'existe plus : depuis la v3.5.0, un profil week2
+ * est migré vers week1 au chargement (cases locales + ligne du Sheet récupérées). La clé week2
+ * reste un alias par sécurité (un vieux cookie ne doit jamais renvoyer à l'écran d'accueil).
  */
 const UTMB_OFFICIAL = {
-  label: "22 août 2027 au 29 août 2027",
-  weekStart: "2027-08-23",
+  label: "semaine UTMB du 22 au 29 août 2027",
+  weekStart: "2027-08-22",
   targetDate: "2027-08-29"
 };
 const UTMB_SCENARIOS = {
